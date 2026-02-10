@@ -1,5 +1,5 @@
 import { Card, Button, Avatar, Descriptions, Divider } from 'antd';
-import { LogoutOutlined, UserOutlined, LockOutlined, CrownOutlined, SettingOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined, LockOutlined, CrownOutlined, SettingOutlined, MessageOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
@@ -30,6 +30,13 @@ function Dashboard() {
                         <div className="flex items-center justify-between">
                             <h1 className="text-2xl font-bold">Dashboard</h1>
                             <div className="flex gap-2">
+                                <Button
+                                    type="default"
+                                    icon={<MessageOutlined />}
+                                    onClick={() => navigate('/chat')}
+                                >
+                                    Chat
+                                </Button>
                                 <Button
                                     type="default"
                                     icon={<SettingOutlined />}

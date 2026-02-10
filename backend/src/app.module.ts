@@ -4,10 +4,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './entities/user.entity';
+import { Message } from './entities/message.entity';
+import { Conversation } from './entities/conversation.entity';
+import { ConversationParticipant } from './entities/conversation-participant.entity';
 import { AuthModule } from './auth/auth.module';
 import { DemoModule } from './demo/demo.module';
 import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -24,7 +28,7 @@ import { ProfileModule } from './profile/profile.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User],
+        entities: [User, Message, Conversation, ConversationParticipant],
         synchronize: configService.get('NODE_ENV') === 'development', // Auto-sync in development only
         logging: configService.get('NODE_ENV') === 'development',
       }),
@@ -34,6 +38,7 @@ import { ProfileModule } from './profile/profile.module';
     DemoModule,
     UsersModule,
     ProfileModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
