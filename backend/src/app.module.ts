@@ -12,6 +12,7 @@ import { DemoModule } from './demo/demo.module';
 import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
 import { ChatModule } from './chat/chat.module';
+import { ConversationsModule } from './conversations/conversations.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ChatModule } from './chat/chat.module';
     UsersModule,
     ProfileModule,
     ChatModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

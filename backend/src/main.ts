@@ -47,6 +47,7 @@ async function bootstrap() {
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management endpoints')
     .addTag('profile', 'User profile management endpoints')
+    .addTag('conversations', 'Conversation management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
