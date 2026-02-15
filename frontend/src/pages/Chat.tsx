@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Empty } from 'antd';
-import { MessageOutlined } from '@ant-design/icons';
+import { Layout, Empty, Button } from 'antd';
+import { MessageOutlined, ArrowLeftOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { ConnectionStatus } from '../components/ConnectionStatus';
 import { ConversationList } from '../components/ConversationList';
@@ -18,8 +19,9 @@ import { messagesApi } from '../api/messages';
 const { Header, Content, Sider } = Layout;
 
 export const Chat: React.FC = () => {
+    const navigate = useNavigate();
     const { connect, disconnect, isConnected, setUnreadCounts } = useWebSocket();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const {
         conversations,
         selectedConversation,
@@ -68,6 +70,16 @@ export const Chat: React.FC = () => {
         }
     };
 
+    const handleLogout = () => {
+        disconnect();
+        logout();
+        navigate('/');
+    };
+
+    const handleBack = () => {
+        navigate('/dashboard');
+    };
+
     useEffect(() => {
         // Auto-connect when component mounts
         connect();
@@ -84,36 +96,88 @@ export const Chat: React.FC = () => {
         messagesApi
             .getAllUnreadCounts()
             .then(setUnreadCounts)
-            .catch(() => {});
+            .catch(() => { });
     }, [isConnected, user, setUnreadCounts]);
 
     return (
-        <Layout style={{ minHeight: '100vh' }}>
+        <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
             <Header
                 style={{
-                    background: '#fff',
-                    padding: '0 24px',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    padding: '0 32px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    borderBottom: '1px solid #f0f0f0',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    height: '72px',
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <MessageOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                    <h2 style={{ margin: 0 }}>Chat Application</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <Button
+                        type="text"
+                        icon={<ArrowLeftOutlined />}
+                        onClick={handleBack}
+                        style={{
+                            color: '#fff',
+                            fontSize: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                        }}
+                        className="header-back-button"
+                    />
+                    <div style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(10px)',
+                    }}>
+                        <MessageOutlined style={{ fontSize: '24px', color: '#fff' }} />
+                    </div>
+                    <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600 }}>
+                        ChatConnect
+                    </h2>
                 </div>
-                <ConnectionStatus />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <ConnectionStatus />
+                    <Button
+                        type="text"
+                        icon={<LogoutOutlined />}
+                        onClick={handleLogout}
+                        style={{
+                            color: '#fff',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            padding: '0 16px',
+                        }}
+                        className="header-logout-button"
+                    >
+                        Logout
+                    </Button>
+                </div>
             </Header>
 
-            <Layout>
+            <Layout style={{ background: '#f8fafc' }}>
                 {/* Conversation List Sidebar */}
                 <Sider
-                    width={350}
+                    width={380}
                     style={{
                         background: '#fff',
                         overflow: 'auto',
-                        height: 'calc(100vh - 64px)',
+                        height: 'calc(100vh - 72px)',
+                        borderRight: '1px solid #e2e8f0',
+                        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)',
                     }}
                     breakpoint="lg"
                     collapsedWidth="0"
@@ -185,9 +249,9 @@ export const Chat: React.FC = () => {
                             }}
                         >
                             <Empty
-                            description="Select a conversation to start chatting"
-                            aria-live="polite"
-                        />
+                                description="Select a conversation to start chatting"
+                                aria-live="polite"
+                            />
                         </div>
                     )}
                 </Content>

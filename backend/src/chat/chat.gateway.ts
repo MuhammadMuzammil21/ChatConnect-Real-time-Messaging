@@ -9,9 +9,12 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { UseGuards, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { JwtWsGuard } from './guards/jwt-ws.guard';
 import { MessageRateLimitService } from './message-rate-limit.service';
+import { AuthService } from '../auth/auth.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { Message, MessageType } from '../entities/message.entity';
 import { UserStatusService } from '../user-status/user-status.service';
@@ -40,13 +43,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly conversationsService: ConversationsService,
     private readonly userStatusService: UserStatusService,
     private readonly messageRateLimitService: MessageRateLimitService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
   ) {}
 
-  @UseGuards(JwtWsGuard)
   async handleConnection(@ConnectedSocket() client: Socket) {
-    const user = client.data.user as { id: string; email: string } | undefined;
+    // Guards do not run before handleConnection in NestJS WebSockets, so we authenticate here.
+    const user = await this.authenticateConnection(client);
     if (!user) {
-      this.logger.warn(`Unauthorized socket connection attempt: ${client.id}`);
+      this.logger.debug(
+        `Unauthorized socket connection (missing or invalid token): ${client.id}`,
+      );
       client.disconnect(true);
       return;
     }
@@ -76,6 +84,47 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     this.logger.log(`Client connected: ${client.id} (user: ${userId})`);
+  }
+
+  /**
+   * Authenticate the socket using handshake token. Returns user payload or null if invalid.
+   */
+  private async authenticateConnection(
+    client: Socket,
+  ): Promise<{ id: string; email: string; role: string } | null> {
+    const token = this.extractTokenFromClient(client);
+    if (!token) return null;
+
+    try {
+      const secret =
+        this.configService.get<string>('JWT_SECRET') || 'default-secret-key';
+      const payload = await this.jwtService.verifyAsync(token, { secret });
+
+      const user = await this.authService.validateUser(payload.sub);
+      if (!user || user.isBanned) return null;
+
+      const userPayload = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      };
+      client.data.user = userPayload;
+      return userPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  private extractTokenFromClient(client: Socket): string | null {
+    const authHeader =
+      (client.handshake.headers.authorization as string | undefined) ?? '';
+    if (authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+    const queryToken =
+      client.handshake.auth?.token || client.handshake.query?.token;
+    if (typeof queryToken === 'string') return queryToken;
+    return null;
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {

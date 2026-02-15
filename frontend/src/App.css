@@ -1,42 +1,251 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Additional Professional Styling for Chat Components */
+
+/* Chat Header Enhancements */
+.ant-layout-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  height: 72px !important;
+  padding: 0 32px !important;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.ant-layout-header h2 {
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Sidebar Styling */
+.ant-layout-sider {
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04) !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Message Bubbles */
+.message-bubble {
+  border-radius: 16px !important;
+  padding: 12px 16px !important;
+  max-width: 70%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
-.card {
-  padding: 2em;
+.message-bubble:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.read-the-docs {
-  color: #888;
+.message-bubble-sent {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  color: white !important;
+  margin-left: auto;
+}
+
+.message-bubble-received {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* Conversation Items */
+.conversation-item {
+  padding: 16px !important;
+  border-radius: 12px !important;
+  margin: 4px 8px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer;
+}
+
+.conversation-item:hover {
+  background: #f8fafc !important;
+  transform: translateX(4px);
+}
+
+.conversation-item-selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+  border-left: 3px solid #6366f1 !important;
+}
+
+/* Input Enhancements */
+.ant-input-affix-wrapper,
+.ant-input {
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  border: 2px solid #e2e8f0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-input-affix-wrapper:hover,
+.ant-input:hover {
+  border-color: #cbd5e1 !important;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Button Enhancements */
+.ant-btn {
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border: none !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+}
+
+/* Modal Enhancements */
+.ant-modal-content {
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-bottom: none !important;
+  padding: 24px !important;
+}
+
+.ant-modal-title {
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+.ant-modal-close {
+  color: white !important;
+}
+
+.ant-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Badge Styling */
+.ant-badge-count {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Avatar Enhancements */
+.ant-avatar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: 2px solid white !important;
+}
+
+/* Empty State */
+.ant-empty-description {
+  color: #64748b !important;
+  font-size: 16px !important;
+}
+
+/* Dropdown Menu */
+.ant-dropdown-menu {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  padding: 8px !important;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: 8px !important;
+  margin: 2px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: #f8fafc !important;
+}
+
+/* Select Dropdown */
+.ant-select-dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ant-select-item {
+  border-radius: 8px !important;
+  margin: 2px 8px !important;
+}
+
+.ant-select-item-option-selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+  color: #6366f1 !important;
+  font-weight: 500 !important;
+}
+
+/* Skeleton Loading */
+.ant-skeleton-element {
+  border-radius: 8px !important;
+}
+
+/* Divider */
+.ant-divider {
+  border-color: #e2e8f0 !important;
+}
+
+/* Typography */
+.ant-typography {
+  color: #1e293b !important;
+}
+
+/* Card Hover Effect */
+.ant-card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+/* Smooth Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+/* Professional Scrollbar for Chat */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Header Button Hover Effects */
+.header-back-button:hover,
+.header-logout-button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px);
+  transition: all 0.2s ease !important;
+}
+
+.header-back-button:active,
+.header-logout-button:active {
+  transform: translateY(0);
 }

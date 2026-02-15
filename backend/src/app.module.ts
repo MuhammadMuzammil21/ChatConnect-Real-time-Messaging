@@ -7,6 +7,7 @@ import { User } from './entities/user.entity';
 import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
+import { UserStatus } from './entities/user-status.entity';
 import { AuthModule } from './auth/auth.module';
 import { DemoModule } from './demo/demo.module';
 import { UsersModule } from './users/users.module';
@@ -30,7 +31,7 @@ import { UserStatusModule } from './user-status/user-status.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Message, Conversation, ConversationParticipant],
+        entities: [User, Message, Conversation, ConversationParticipant, UserStatus],
         synchronize: configService.get('NODE_ENV') === 'development', // Auto-sync in development only
         logging: configService.get('NODE_ENV') === 'development',
       }),

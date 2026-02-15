@@ -9,21 +9,32 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Get()
-    @ApiOperation({ summary: 'Get all users (ADMIN only)' })
+    @ApiOperation({ summary: 'Get all users (for authenticated users)' })
     @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
-    @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
     async findAll() {
         return this.usersService.findAll();
     }
 
+    @Get('admin/all')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Get all users with full details (ADMIN only)' })
+    @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+    @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+    async findAllAdmin() {
+        return this.usersService.findAllAdmin();
+    }
+
     @Get(':id')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'Get user by ID (ADMIN only)' })
     @ApiParam({ name: 'id', description: 'User ID' })
     @ApiResponse({ status: 200, description: 'User retrieved successfully' })
@@ -40,6 +51,8 @@ export class UsersController {
     }
 
     @Patch(':id/role')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'Update user role (ADMIN only)' })
     @ApiParam({ name: 'id', description: 'User ID' })
     @ApiResponse({ status: 200, description: 'Role updated successfully' })
@@ -57,3 +70,4 @@ export class UsersController {
         };
     }
 }
+

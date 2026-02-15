@@ -8,12 +8,17 @@ export class UsersService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
-    ) {}
+    ) { }
+
 
     async findAll(): Promise<User[]> {
         return this.userRepository.find({
             select: ['id', 'email', 'displayName', 'avatarUrl', 'role', 'subscriptionStatus', 'createdAt'],
         });
+    }
+
+    async findAllAdmin(): Promise<User[]> {
+        return this.userRepository.find();
     }
 
     async findOne(id: string): Promise<User | null> {

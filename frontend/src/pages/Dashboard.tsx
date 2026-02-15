@@ -1,12 +1,12 @@
-import { Card, Button, Avatar, Descriptions, Divider } from 'antd';
-import { LogoutOutlined, UserOutlined, LockOutlined, CrownOutlined, SettingOutlined, MessageOutlined } from '@ant-design/icons';
+import { Card, Button, Avatar, Layout, Statistic, Row, Col } from 'antd';
+import { LogoutOutlined, UserOutlined, MessageOutlined, SettingOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import RoleBadge from '../components/RoleBadge';
-import RoleGate from '../components/RoleGate';
-import UpgradeBanner from '../components/UpgradeBanner';
-import { UserRole } from '../types/auth';
+import '../App.css';
+
+const { Header, Content } = Layout;
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -22,151 +22,301 @@ function Dashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-            <div className="max-w-4xl mx-auto space-y-6">
-                <Card
-                    className="shadow-2xl"
-                    title={
-                        <div className="flex items-center justify-between">
-                            <h1 className="text-2xl font-bold">Dashboard</h1>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="default"
-                                    icon={<MessageOutlined />}
-                                    onClick={() => navigate('/chat')}
-                                >
-                                    Chat
-                                </Button>
-                                <Button
-                                    type="default"
-                                    icon={<SettingOutlined />}
-                                    onClick={() => navigate('/profile')}
-                                >
-                                    Profile
-                                </Button>
+        <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
+            <Header
+                style={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    padding: '0 32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    height: '72px',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(10px)',
+                    }}>
+                        <MessageOutlined style={{ fontSize: '24px', color: '#fff' }} />
+                    </div>
+                    <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600 }}>
+                        ChatConnect
+                    </h2>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <Button
+                        type="text"
+                        icon={<MessageOutlined />}
+                        onClick={() => navigate('/chat')}
+                        style={{
+                            color: '#fff',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            padding: '0 16px',
+                        }}
+                        className="header-logout-button"
+                    >
+                        Chat
+                    </Button>
+                    <Button
+                        type="text"
+                        icon={<SettingOutlined />}
+                        onClick={() => navigate('/profile')}
+                        style={{
+                            color: '#fff',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            padding: '0 16px',
+                        }}
+                        className="header-logout-button"
+                    >
+                        Profile
+                    </Button>
+                    <Button
+                        type="text"
+                        icon={<LogoutOutlined />}
+                        onClick={handleLogout}
+                        style={{
+                            color: '#fff',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            padding: '0 16px',
+                        }}
+                        className="header-logout-button"
+                    >
+                        Logout
+                    </Button>
+                </div>
+            </Header>
+
+            <Content style={{ padding: '32px', background: '#f8fafc' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    {/* Welcome Card */}
+                    <Card
+                        style={{
+                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                            border: 'none',
+                            borderRadius: '16px',
+                            marginBottom: '24px',
+                            boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)',
+                        }}
+                        bodyStyle={{ padding: '32px' }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                            <Avatar
+                                size={80}
+                                src={user.avatarUrl}
+                                icon={<UserOutlined />}
+                                style={{
+                                    border: '4px solid rgba(255, 255, 255, 0.3)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                }}
+                            />
+                            <div style={{ flex: 1 }}>
+                                <h1 style={{ margin: 0, color: '#fff', fontSize: '28px', fontWeight: 700 }}>
+                                    Welcome back, {user.displayName}!
+                                </h1>
+                                <p style={{ margin: '8px 0 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: '16px' }}>
+                                    {user.email}
+                                </p>
+                                <div style={{ marginTop: '12px' }}>
+                                    <RoleBadge role={user.role} />
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Stats Cards */}
+                    <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                        <Col xs={24} sm={12} lg={8}>
+                            <Card
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                                }}
+                            >
+                                <Statistic
+                                    title="Account Status"
+                                    value="Active"
+                                    prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
+                                    valueStyle={{ color: '#10b981', fontSize: '24px', fontWeight: 600 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={8}>
+                            <Card
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                                }}
+                            >
+                                <Statistic
+                                    title="Member Since"
+                                    value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    prefix={<ClockCircleOutlined style={{ color: '#6366f1' }} />}
+                                    valueStyle={{ color: '#1f2937', fontSize: '20px', fontWeight: 600 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={8}>
+                            <Card
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                                }}
+                            >
+                                <Statistic
+                                    title="Account Type"
+                                    value={user.role}
+                                    prefix={<TeamOutlined style={{ color: '#8b5cf6' }} />}
+                                    valueStyle={{ color: '#1f2937', fontSize: '20px', fontWeight: 600 }}
+                                />
+                            </Card>
+                        </Col>
+                    </Row>
+
+                    {/* Quick Actions */}
+                    <Card
+                        title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Quick Actions</span>}
+                        style={{
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                            marginBottom: '24px',
+                        }}
+                    >
+                        <Row gutter={[16, 16]}>
+                            <Col xs={24} sm={12}>
                                 <Button
                                     type="primary"
-                                    danger
-                                    icon={<LogoutOutlined />}
-                                    onClick={handleLogout}
+                                    size="large"
+                                    icon={<MessageOutlined />}
+                                    onClick={() => navigate('/chat')}
+                                    block
+                                    style={{
+                                        height: '56px',
+                                        fontSize: '16px',
+                                        fontWeight: 500,
+                                        borderRadius: '10px',
+                                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                        border: 'none',
+                                    }}
                                 >
-                                    Logout
+                                    Start Chatting
                                 </Button>
+                            </Col>
+                            <Col xs={24} sm={12}>
+                                <Button
+                                    size="large"
+                                    icon={<SettingOutlined />}
+                                    onClick={() => navigate('/profile')}
+                                    block
+                                    style={{
+                                        height: '56px',
+                                        fontSize: '16px',
+                                        fontWeight: 500,
+                                        borderRadius: '10px',
+                                        borderColor: '#6366f1',
+                                        color: '#6366f1',
+                                    }}
+                                >
+                                    Edit Profile
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Card>
+
+                    {/* Features Overview */}
+                    <Card
+                        title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Your Features</span>}
+                        style={{
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                        }}
+                    >
+                        <div style={{ display: 'grid', gap: '16px' }}>
+                            {/* Free Features */}
+                            <div
+                                style={{
+                                    padding: '20px',
+                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                    borderRadius: '12px',
+                                    border: '1px solid #86efac',
+                                }}
+                            >
+                                <h3 style={{ margin: '0 0 12px 0', color: '#166534', fontSize: '16px', fontWeight: 600 }}>
+                                    ✓ Included Features
+                                </h3>
+                                <ul style={{ margin: 0, paddingLeft: '20px', color: '#15803d' }}>
+                                    <li>Real-time messaging</li>
+                                    <li>Create conversations</li>
+                                    <li>Message editing & deletion</li>
+                                    <li>Online status indicators</li>
+                                    <li>Typing indicators</li>
+                                </ul>
                             </div>
-                        </div>
-                    }
-                >
-                    <div className="flex items-center space-x-6 mb-8">
-                        <Avatar
-                            size={80}
-                            src={user.avatarUrl}
-                            icon={<UserOutlined />}
-                        />
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-800">
-                                {user.displayName}
-                            </h2>
-                            <p className="text-gray-600">{user.email}</p>
-                            <div className="mt-2">
-                                <RoleBadge role={user.role} />
-                            </div>
-                        </div>
-                    </div>
 
-                    <Descriptions title="User Information" bordered column={1}>
-                        <Descriptions.Item label="User ID">{user.id}</Descriptions.Item>
-                        <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
-                        <Descriptions.Item label="Display Name">{user.displayName}</Descriptions.Item>
-                        <Descriptions.Item label="Role">
-                            <RoleBadge role={user.role} />
-                        </Descriptions.Item>
-                    </Descriptions>
-
-                    <Divider>Role-Based Features</Divider>
-
-                    {/* Free User Features */}
-                    <div className="space-y-4">
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <h3 className="text-lg font-semibold text-green-800 mb-2 flex items-center gap-2">
-                                <UserOutlined /> Free Features (Everyone)
-                            </h3>
-                            <ul className="text-green-700 list-disc list-inside">
-                                <li>Basic chat messaging</li>
-                                <li>Profile management</li>
-                                <li>Standard support</li>
-                            </ul>
-                        </div>
-
-                        {/* Premium Features */}
-                        <RoleGate
-                            allowedRoles={[UserRole.PREMIUM, UserRole.ADMIN]}
-                            fallback={
-                                <div className="p-4 bg-gray-100 border border-gray-300 rounded-lg relative">
-                                    <div className="absolute top-2 right-2">
-                                        <LockOutlined className="text-gray-400 text-xl" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                                        Premium Features (Locked)
+                            {/* Premium/Admin Features */}
+                            {(isPremium || isAdmin) && (
+                                <div
+                                    style={{
+                                        padding: '20px',
+                                        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                                        borderRadius: '12px',
+                                        border: '1px solid #93c5fd',
+                                    }}
+                                >
+                                    <h3 style={{ margin: '0 0 12px 0', color: '#1e40af', fontSize: '16px', fontWeight: 600 }}>
+                                        ⭐ {isAdmin ? 'Admin' : 'Premium'} Features
                                     </h3>
-                                    <ul className="text-gray-500 list-disc list-inside mb-3">
-                                        <li>Advanced chat features</li>
-                                        <li>File sharing (up to 100MB)</li>
-                                        <li>Custom themes</li>
-                                        <li>Priority support</li>
+                                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e3a8a' }}>
+                                        {isAdmin ? (
+                                            <>
+                                                <li>User management</li>
+                                                <li>System analytics</li>
+                                                <li>Role assignment</li>
+                                                <li>Full system access</li>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <li>Advanced chat features</li>
+                                                <li>File sharing (up to 100MB)</li>
+                                                <li>Custom themes</li>
+                                                <li>Priority support</li>
+                                            </>
+                                        )}
                                     </ul>
-                                    <UpgradeBanner feature="premium features" />
                                 </div>
-                            }
-                        >
-                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                                    Premium Features (Unlocked)
-                                </h3>
-                                <ul className="text-blue-700 list-disc list-inside">
-                                    <li>Advanced chat features</li>
-                                    <li>File sharing (up to 100MB)</li>
-                                    <li>Custom themes</li>
-                                    <li>Priority support</li>
-                                </ul>
-                            </div>
-                        </RoleGate>
-
-                        {/* Admin Features */}
-                        <RoleGate
-                            allowedRoles={[UserRole.ADMIN]}
-                            fallback={null}
-                        >
-                            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                                <h3 className="text-lg font-semibold text-purple-800 mb-2 flex items-center gap-2">
-                                    <CrownOutlined /> Admin Features
-                                </h3>
-                                <ul className="text-purple-700 list-disc list-inside">
-                                    <li>User management</li>
-                                    <li>System analytics</li>
-                                    <li>Role assignment</li>
-                                    <li>Full system access</li>
-                                </ul>
-                            </div>
-                        </RoleGate>
-                    </div>
-
-                    <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
-                        <h3 className="text-lg font-semibold text-green-800 mb-2">
-                            🎉 Authentication Successful!
-                        </h3>
-                        <p className="text-green-700">
-                            You have successfully logged in using Google OAuth 2.0.
-                            Your JWT tokens are securely stored and automatically refreshed when needed.
-                        </p>
-                        <p className="text-green-700 mt-2">
-                            <strong>Current Role:</strong> {user.role} - {isFree && 'Basic access granted'}
-                            {isPremium && !isAdmin && 'Premium features unlocked'}
-                            {isAdmin && 'Full admin access granted'}
-                        </p>
-                    </div>
-                </Card>
-            </div>
-        </div>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            </Content>
+        </Layout>
     );
 }
 
