@@ -38,6 +38,8 @@ export interface Message {
     isEdited: boolean;
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string | null;
+    editedAt?: string | null;
 }
 
 export interface Conversation {

@@ -3,6 +3,7 @@ import { List, Input, Button, Empty, Spin, Typography } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import type { Conversation } from '../types/conversation';
 import { ConversationItem } from './ConversationItem';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 const { Title } = Typography;
 
@@ -24,6 +25,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     loading = false,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const { getUnreadCount } = useWebSocket();
 
     // Filter conversations based on search query
     const filteredConversations = useMemo(() => {
@@ -119,6 +121,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                                 isSelected={conversation.id === selectedConversationId}
                                 onClick={onSelectConversation}
                                 currentUserId={currentUserId}
+                                unreadCount={getUnreadCount(conversation.id)}
                             />
                         )}
                     />

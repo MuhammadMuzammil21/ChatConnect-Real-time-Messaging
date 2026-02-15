@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
 import { ChatModule } from './chat/chat.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { UserStatusModule } from './user-status/user-status.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ConversationsModule } from './conversations/conversations.module';
     ProfileModule,
     ChatModule,
     ConversationsModule,
+    UserStatusModule,
   ],
   controllers: [AppController],
   providers: [AppService],

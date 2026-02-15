@@ -2,6 +2,14 @@ import React, { createContext, useContext, useEffect, useState, useCallback, typ
 import { io, Socket } from 'socket.io-client';
 import { message as antdMessage } from 'antd';
 
+import { UserStatusEnum } from '../components/OnlineStatusBadge';
+
+interface UserStatus {
+    userId: string;
+    status: UserStatusEnum;
+    lastSeen?: Date;
+}
+
 interface WebSocketContextType {
     socket: Socket | null;
     isConnected: boolean;
@@ -10,6 +18,17 @@ interface WebSocketContextType {
     emit: (event: string, data: any) => void;
     on: (event: string, handler: (...args: any[]) => void) => void;
     off: (event: string, handler: (...args: any[]) => void) => void;
+    // Typing indicators
+    typingUsers: Map<string, Set<string>>; // conversationId -> Set of userIds
+    emitTypingStart: (conversationId: string) => void;
+    emitTypingStop: (conversationId: string) => void;
+    // User status
+    userStatuses: Map<string, UserStatus>; // userId -> UserStatus
+    getUserStatus: (userId: string) => UserStatus | undefined;
+    // Unread counts (real-time updates)
+    unreadCounts: Record<string, number>; // conversationId -> unread count
+    getUnreadCount: (conversationId: string) => number;
+    setUnreadCounts: (counts: { conversationId: string; unreadCount: number }[]) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -21,6 +40,10 @@ interface WebSocketProviderProps {
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(new Map());
+    const [userStatuses, setUserStatuses] = useState<Map<string, UserStatus>>(new Map());
+    const [unreadCounts, setUnreadCountsState] = useState<Record<string, number>>({});
+    const [heartbeatInterval, setHeartbeatInterval] = useState<number | null>(null);
 
     const connect = useCallback(() => {
         // Get token from localStorage
@@ -90,8 +113,77 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
             console.log('Received pong:', data);
         });
 
+        // Typing indicators
+        newSocket.on('userTyping', (data: { userId: string; conversationId: string }) => {
+            setTypingUsers((prev) => {
+                const newMap = new Map(prev);
+                if (!newMap.has(data.conversationId)) {
+                    newMap.set(data.conversationId, new Set());
+                }
+                newMap.get(data.conversationId)!.add(data.userId);
+                return newMap;
+            });
+        });
+
+        newSocket.on('userStoppedTyping', (data: { userId: string; conversationId: string }) => {
+            setTypingUsers((prev) => {
+                const newMap = new Map(prev);
+                const conversationTyping = newMap.get(data.conversationId);
+                if (conversationTyping) {
+                    conversationTyping.delete(data.userId);
+                    if (conversationTyping.size === 0) {
+                        newMap.delete(data.conversationId);
+                    }
+                }
+                return newMap;
+            });
+        });
+
+        // User status changes
+        newSocket.on('userStatusChanged', (data: { userId: string; status: string; lastSeen: Date }) => {
+            setUserStatuses((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(data.userId, {
+                    userId: data.userId,
+                    status: data.status as UserStatusEnum,
+                    lastSeen: data.lastSeen ? new Date(data.lastSeen) : undefined,
+                });
+                return newMap;
+            });
+        });
+
+        // Real-time unread count updates
+        newSocket.on('unreadCountUpdated', (data: { conversationId: string; unreadCount: number }) => {
+            setUnreadCountsState((prev) => ({ ...prev, [data.conversationId]: data.unreadCount }));
+        });
+        newSocket.on('conversationRead', (data: { conversationId: string; unreadCount?: number }) => {
+            setUnreadCountsState((prev) => ({
+                ...prev,
+                [data.conversationId]: data.unreadCount ?? 0,
+            }));
+        });
+
         setSocket(newSocket);
     }, []);
+
+    // Start heartbeat when connected
+    useEffect(() => {
+        if (socket && isConnected) {
+            // Send heartbeat every 30 seconds
+            const interval = setInterval(() => {
+                socket.emit('heartbeat');
+            }, 30000);
+
+            setHeartbeatInterval(interval);
+
+            return () => {
+                clearInterval(interval);
+            };
+        } else if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            setHeartbeatInterval(null);
+        }
+    }, [socket, isConnected]);
 
     const disconnect = useCallback(() => {
         if (socket) {
@@ -121,6 +213,41 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
     }, [socket]);
 
+    const emitTypingStart = useCallback((conversationId: string) => {
+        if (socket && isConnected) {
+            socket.emit('typingStart', { conversationId });
+        }
+    }, [socket, isConnected]);
+
+    const emitTypingStop = useCallback((conversationId: string) => {
+        if (socket && isConnected) {
+            socket.emit('typingStop', { conversationId });
+        }
+    }, [socket, isConnected]);
+
+    const getUserStatus = useCallback((userId: string): UserStatus | undefined => {
+        return userStatuses.get(userId);
+    }, [userStatuses]);
+
+    const getUnreadCount = useCallback(
+        (conversationId: string): number => {
+            return unreadCounts[conversationId] ?? 0;
+        },
+        [unreadCounts]
+    );
+
+    const setUnreadCounts = useCallback(
+        (counts: { conversationId: string; unreadCount: number }[]) => {
+            setUnreadCountsState(
+                counts.reduce<Record<string, number>>((acc, { conversationId, unreadCount }) => {
+                    acc[conversationId] = unreadCount;
+                    return acc;
+                }, {})
+            );
+        },
+        []
+    );
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -138,6 +265,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         emit,
         on,
         off,
+        typingUsers,
+        emitTypingStart,
+        emitTypingStop,
+        userStatuses,
+        getUserStatus,
+        unreadCounts,
+        getUnreadCount,
+        setUnreadCounts,
     };
 
     return (

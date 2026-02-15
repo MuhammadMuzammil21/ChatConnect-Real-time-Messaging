@@ -1,0 +1,67 @@
+.message-list-skeleton {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.skeleton-message {
+    display: flex;
+    width: 100%;
+}
+
+.skeleton-message-left {
+    justify-content: flex-start;
+}
+
+.skeleton-message-right {
+    justify-content: flex-end;
+}
+
+.skeleton-message-content {
+    display: flex;
+    gap: 12px;
+    max-width: 70%;
+    align-items: flex-start;
+}
+
+.skeleton-message-right .skeleton-message-content {
+    flex-direction: row-reverse;
+}
+
+.skeleton-message-bubble {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.skeleton-message-bubble .ant-skeleton {
+    margin: 0;
+}
+
+.skeleton-message-bubble .ant-skeleton-paragraph {
+    margin: 0;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+.skeleton-message-bubble {
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(to right,
+            #f5f5f5 0%,
+            #e8e8e8 20%,
+            #f5f5f5 40%,
+            #f5f5f5 100%);
+    background-size: 800px 104px;
+}

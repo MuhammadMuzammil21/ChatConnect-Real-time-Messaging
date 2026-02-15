@@ -1,0 +1,48 @@
+.conversation-list-skeleton {
+    padding: 0;
+}
+
+.skeleton-conversation-item {
+    padding: 16px !important;
+    display: flex !important;
+    gap: 12px;
+    align-items: center !important;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-conversation-content {
+    flex: 1;
+}
+
+.skeleton-conversation-content .ant-skeleton {
+    margin: 0;
+}
+
+.skeleton-conversation-content .ant-skeleton-title {
+    margin: 0 0 8px 0;
+}
+
+.skeleton-conversation-content .ant-skeleton-paragraph {
+    margin: 0;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+.skeleton-conversation-item {
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(to right,
+            #ffffff 0%,
+            #f9f9f9 20%,
+            #ffffff 40%,
+            #ffffff 100%);
+    background-size: 800px 104px;
+}

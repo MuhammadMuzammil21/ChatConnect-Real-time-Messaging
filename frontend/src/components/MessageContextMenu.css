@@ -1,0 +1,13 @@
+.message-context-menu-trigger {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.message-item:hover .message-context-menu-trigger {
+    opacity: 1;
+}
+
+.message-context-menu-trigger:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}

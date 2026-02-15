@@ -5,6 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  Index,
+  DeleteDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Conversation } from './conversation.entity';
@@ -16,6 +19,8 @@ export enum MessageType {
 }
 
 @Entity('messages')
+@Index(['deletedAt'])
+@Index(['content'], { fulltext: true })
 export class Message {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -44,6 +49,16 @@ export class Message {
 
   @Column({ name: 'is_edited', default: false })
   isEdited: boolean;
+
+  @Column({ name: 'edited_at', type: 'timestamptz', nullable: true })
+  editedAt: Date | null;
+
+  @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt: Date | null;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'deleted_by_id' })
+  deletedBy: User | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

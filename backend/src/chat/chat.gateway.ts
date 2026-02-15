@@ -11,8 +11,10 @@ import {
 import { UseGuards, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtWsGuard } from './guards/jwt-ws.guard';
+import { MessageRateLimitService } from './message-rate-limit.service';
 import { ConversationsService } from '../conversations/conversations.service';
-import { Message } from '../entities/message.entity';
+import { Message, MessageType } from '../entities/message.entity';
+import { UserStatusService } from '../user-status/user-status.service';
 
 @WebSocketGateway({
   cors: {
@@ -27,10 +29,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(ChatGateway.name);
 
-  // Simple in-memory session map: socket.id -> userId
-  private sessions = new Map<string, string>();
+  // Enhanced session map: userId -> Set of socket IDs (for multi-device support)
+  private userSessions = new Map<string, Set<string>>();
+  // Reverse map: socket.id -> userId for quick lookup
+  private socketToUser = new Map<string, string>();
+  // Typing state: conversationId -> Set of userIds currently typing
+  private typingUsers = new Map<string, Map<string, NodeJS.Timeout>>();
 
-  constructor(private readonly conversationsService: ConversationsService) {}
+  constructor(
+    private readonly conversationsService: ConversationsService,
+    private readonly userStatusService: UserStatusService,
+    private readonly messageRateLimitService: MessageRateLimitService,
+  ) {}
 
   @UseGuards(JwtWsGuard)
   async handleConnection(@ConnectedSocket() client: Socket) {
@@ -41,16 +51,61 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    this.sessions.set(client.id, user.id);
-    this.logger.log(`Client connected: ${client.id} (user: ${user.id})`);
+    const userId = user.id;
+
+    // Track socket to user mapping
+    this.socketToUser.set(client.id, userId);
+
+    // Track user sessions (multi-device support)
+    if (!this.userSessions.has(userId)) {
+      this.userSessions.set(userId, new Set());
+    }
+    this.userSessions.get(userId)!.add(client.id);
+
+    // Join user to personal room for status broadcasts
+    await client.join(this.getUserRoomName(userId));
+
+    // Set user status to ONLINE
+    await this.userStatusService.setUserOnline(userId);
+
+    // Broadcast status change to user's contacts
+    this.server.emit('userStatusChanged', {
+      userId,
+      status: 'ONLINE',
+      lastSeen: new Date(),
+    });
+
+    this.logger.log(`Client connected: ${client.id} (user: ${userId})`);
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
-    const userId = this.sessions.get(client.id);
-    this.sessions.delete(client.id);
-    this.logger.log(
-      `Client disconnected: ${client.id}${userId ? ` (user: ${userId})` : ''}`,
-    );
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      this.logger.log(`Client disconnected: ${client.id} (no user mapping)`);
+      return;
+    }
+
+    // Remove socket from user sessions
+    const userSocketSet = this.userSessions.get(userId);
+    if (userSocketSet) {
+      userSocketSet.delete(client.id);
+
+      // If user has no more active connections, set status to OFFLINE
+      if (userSocketSet.size === 0) {
+        this.userSessions.delete(userId);
+        await this.userStatusService.setUserOffline(userId);
+
+        // Broadcast status change
+        this.server.emit('userStatusChanged', {
+          userId,
+          status: 'OFFLINE',
+          lastSeen: new Date(),
+        });
+      }
+    }
+
+    this.socketToUser.delete(client.id);
+    this.logger.log(`Client disconnected: ${client.id} (user: ${userId})`);
   }
 
   @UseGuards(JwtWsGuard)
@@ -74,7 +129,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { conversationId: string },
   ): Promise<{ event: string; data: any }> {
-    const userId = this.sessions.get(client.id);
+    const userId = this.socketToUser.get(client.id);
     if (!userId) {
       throw new WsException('Unauthorized');
     }
@@ -106,7 +161,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { conversationId: string },
   ): Promise<{ event: string; data: any }> {
-    const userId = this.sessions.get(client.id);
+    const userId = this.socketToUser.get(client.id);
     if (!userId) {
       throw new WsException('Unauthorized');
     }
@@ -132,16 +187,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleSendConversationMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: { conversationId: string; content: string },
+    payload: { conversationId: string; content: string; messageType?: MessageType },
   ): Promise<{ event: string; data: any }> {
-    const userId = this.sessions.get(client.id);
+    const userId = this.socketToUser.get(client.id);
     if (!userId) {
       throw new WsException('Unauthorized');
     }
 
-    const { conversationId, content } = payload || {};
+    const { conversationId, content, messageType } = payload || {};
     if (!conversationId || !content || !content.trim()) {
       throw new WsException('conversationId and non-empty content are required');
+    }
+
+    if (!this.messageRateLimitService.tryAcquire(userId)) {
+      const retryAfter = this.messageRateLimitService.getRetryAfterSeconds(userId);
+      throw new WsException(
+        retryAfter > 0
+          ? `Rate limit exceeded. Try again in ${retryAfter} seconds.`
+          : 'Rate limit exceeded. Please slow down.',
+      );
     }
 
     let message: Message;
@@ -150,6 +214,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         conversationId,
         userId,
         content.trim(),
+        messageType ?? MessageType.TEXT,
       );
     } catch (error: any) {
       this.logger.error(
@@ -159,25 +224,333 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const roomName = this.getConversationRoomName(conversationId);
-    this.server.to(roomName).emit('conversationMessage', {
+    const payloadToBroadcast = {
       id: message.id,
       content: message.content,
       senderId: message.sender.id,
       conversationId,
+      messageType: message.messageType,
       createdAt: message.createdAt,
-    });
+    };
+
+    this.server.to(roomName).emit('conversationMessage', payloadToBroadcast);
+
+    // Push real-time unread count to other participants (exclude sender)
+    const participantIds =
+      await this.conversationsService.getConversationParticipantUserIds(
+        conversationId,
+      );
+    for (const participantId of participantIds) {
+      if (participantId === userId) continue;
+      const count =
+        await this.conversationsService.getUnreadCountForConversation(
+          conversationId,
+          participantId,
+        );
+      this.server.to(this.getUserRoomName(participantId)).emit(
+        'unreadCountUpdated',
+        { conversationId, unreadCount: count },
+      );
+    }
 
     return {
       event: 'messageSent',
       data: {
         conversationId,
         messageId: message.id,
+        messageType: message.messageType,
+        createdAt: message.createdAt,
       },
     };
   }
 
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('markConversationRead')
+  async handleMarkConversationRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { conversationId: string },
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    const { conversationId } = payload || {};
+    if (!conversationId) {
+      throw new WsException('conversationId is required');
+    }
+
+    try {
+      await this.conversationsService.markConversationAsRead(
+        conversationId,
+        userId,
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to mark conversation ${conversationId} as read: ${error.message}`,
+      );
+      throw new WsException(error.message ?? 'Failed to mark as read');
+    }
+
+    const readAt = new Date();
+
+    // Notify reader's clients with unreadCount: 0
+    const userRoomName = this.getUserRoomName(userId);
+    this.server.to(userRoomName).emit('conversationRead', {
+      conversationId,
+      readAt,
+      unreadCount: 0,
+    });
+
+    // Notify other participants in the conversation (for read receipts / UI updates)
+    const roomName = this.getConversationRoomName(conversationId);
+    this.server.to(roomName).emit('userMarkedConversationRead', {
+      userId,
+      conversationId,
+      readAt,
+    });
+
+    return {
+      event: 'conversationMarkedRead',
+      data: {
+        conversationId,
+        readAt,
+        unreadCount: 0,
+      },
+    };
+  }
+
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('typingStart')
+  async handleTypingStart(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { conversationId: string },
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    const { conversationId } = payload || {};
+    if (!conversationId) {
+      throw new WsException('conversationId is required');
+    }
+
+    // Verify user is participant
+    await this.conversationsService.assertUserIsParticipant(
+      conversationId,
+      userId,
+    );
+
+    // Track typing state with auto-timeout
+    if (!this.typingUsers.has(conversationId)) {
+      this.typingUsers.set(conversationId, new Map());
+    }
+
+    const conversationTyping = this.typingUsers.get(conversationId)!;
+
+    // Clear existing timeout if any
+    const existingTimeout = conversationTyping.get(userId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set new timeout (auto-stop after 3 seconds)
+    const timeout = setTimeout(() => {
+      this.handleTypingTimeout(conversationId, userId);
+    }, 3000);
+
+    conversationTyping.set(userId, timeout);
+
+    // Broadcast to conversation room (exclude sender)
+    const roomName = this.getConversationRoomName(conversationId);
+    client.to(roomName).emit('userTyping', {
+      userId,
+      conversationId,
+      timestamp: new Date(),
+    });
+
+    return {
+      event: 'typingStarted',
+      data: { conversationId },
+    };
+  }
+
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('typingStop')
+  async handleTypingStop(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { conversationId: string },
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    const { conversationId } = payload || {};
+    if (!conversationId) {
+      throw new WsException('conversationId is required');
+    }
+
+    this.clearTypingState(conversationId, userId);
+
+    // Broadcast to conversation room
+    const roomName = this.getConversationRoomName(conversationId);
+    client.to(roomName).emit('userStoppedTyping', {
+      userId,
+      conversationId,
+    });
+
+    return {
+      event: 'typingStopped',
+      data: { conversationId },
+    };
+  }
+
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('heartbeat')
+  async handleHeartbeat(
+    @ConnectedSocket() client: Socket,
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    await this.userStatusService.updateHeartbeat(userId);
+
+    return {
+      event: 'heartbeatAck',
+      data: { timestamp: new Date() },
+    };
+  }
+
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('editMessage')
+  async handleEditMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { messageId: string; content: string },
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    const { messageId, content } = payload || {};
+    if (!messageId || !content) {
+      throw new WsException('messageId and content are required');
+    }
+
+    let editedMessage;
+    try {
+      editedMessage = await this.conversationsService.editMessage(
+        messageId,
+        userId,
+        { content },
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to edit message ${messageId}: ${error.message}`,
+      );
+      throw new WsException(error.message ?? 'Failed to edit message');
+    }
+
+    // Broadcast to conversation room
+    const roomName = this.getConversationRoomName(
+      editedMessage.conversation.id,
+    );
+    this.server.to(roomName).emit('messageEdited', {
+      messageId: editedMessage.id,
+      content: editedMessage.content,
+      editedAt: editedMessage.editedAt,
+      conversationId: editedMessage.conversation.id,
+    });
+
+    return {
+      event: 'messageEditedSuccess',
+      data: {
+        messageId: editedMessage.id,
+        content: editedMessage.content,
+        editedAt: editedMessage.editedAt,
+      },
+    };
+  }
+
+  @UseGuards(JwtWsGuard)
+  @SubscribeMessage('deleteMessage')
+  async handleDeleteMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { messageId: string; conversationId: string },
+  ): Promise<{ event: string; data: any }> {
+    const userId = this.socketToUser.get(client.id);
+    if (!userId) {
+      throw new WsException('Unauthorized');
+    }
+
+    const { messageId, conversationId } = payload || {};
+    if (!messageId || !conversationId) {
+      throw new WsException('messageId and conversationId are required');
+    }
+
+    try {
+      await this.conversationsService.deleteMessage(messageId, userId);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to delete message ${messageId}: ${error.message}`,
+      );
+      throw new WsException(error.message ?? 'Failed to delete message');
+    }
+
+    // Broadcast to conversation room
+    const roomName = this.getConversationRoomName(conversationId);
+    this.server.to(roomName).emit('messageDeleted', {
+      messageId,
+      conversationId,
+      deletedAt: new Date(),
+    });
+
+    return {
+      event: 'messageDeletedSuccess',
+      data: {
+        messageId,
+        conversationId,
+        deletedAt: new Date(),
+      },
+    };
+  }
+
+  private handleTypingTimeout(conversationId: string, userId: string): void {
+    this.clearTypingState(conversationId, userId);
+
+    // Broadcast typing stopped
+    const roomName = this.getConversationRoomName(conversationId);
+    this.server.to(roomName).emit('userStoppedTyping', {
+      userId,
+      conversationId,
+    });
+  }
+
+  private clearTypingState(conversationId: string, userId: string): void {
+    const conversationTyping = this.typingUsers.get(conversationId);
+    if (conversationTyping) {
+      const timeout = conversationTyping.get(userId);
+      if (timeout) {
+        clearTimeout(timeout);
+        conversationTyping.delete(userId);
+      }
+
+      if (conversationTyping.size === 0) {
+        this.typingUsers.delete(conversationId);
+      }
+    }
+  }
+
   private getConversationRoomName(conversationId: string): string {
     return `conversation:${conversationId}`;
+  }
+
+  private getUserRoomName(userId: string): string {
+    return `user:${userId}`;
   }
 }
 

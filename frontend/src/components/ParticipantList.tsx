@@ -5,6 +5,8 @@ import type { Conversation } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
 import { conversationsApi } from '../api/conversations';
 import RoleBadge from './RoleBadge';
+import { OnlineStatusBadge, UserStatusEnum } from './OnlineStatusBadge';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 const { Title, Text } = Typography;
 
@@ -24,6 +26,7 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
     onUpdate,
 }) => {
     const [removing, setRemoving] = useState<string | null>(null);
+    const { getUserStatus } = useWebSocket();
 
     const isCreator = conversation.createdBy.id === currentUserId;
     const isGroupConversation = conversation.type === ConversationType.GROUP;
@@ -102,14 +105,26 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
                         >
                             <List.Item.Meta
                                 avatar={
-                                    <Avatar
-                                        src={participant.user.avatarUrl}
-                                        icon={<UserOutlined />}
-                                        size="large"
-                                    >
-                                        {!participant.user.avatarUrl &&
-                                            participant.user.displayName[0].toUpperCase()}
-                                    </Avatar>
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <Avatar
+                                            src={participant.user.avatarUrl}
+                                            icon={<UserOutlined />}
+                                            size="large"
+                                        >
+                                            {!participant.user.avatarUrl &&
+                                                participant.user.displayName[0].toUpperCase()}
+                                        </Avatar>
+                                        <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
+                                            <OnlineStatusBadge
+                                                status={
+                                                    getUserStatus(participant.user.id)?.status ||
+                                                    UserStatusEnum.OFFLINE
+                                                }
+                                                lastSeen={getUserStatus(participant.user.id)?.lastSeen}
+                                                size="small"
+                                            />
+                                        </div>
+                                    </div>
                                 }
                                 title={
                                     <Space>

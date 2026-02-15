@@ -6,6 +6,8 @@ import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
 import { CreateChatEntities1739200000000 } from './migrations/1739200000000-CreateChatEntities';
+import { CreateUserStatus1739520000000 } from './migrations/1739520000000-CreateUserStatus';
+import { UpdateMessageEntity1739520100000 } from './migrations/1739520100000-UpdateMessageEntity';
 
 ConfigModule.forRoot({
   isGlobal: false,
@@ -22,7 +24,11 @@ export const AppDataSource = new DataSource({
   password: configService.get('DB_PASSWORD'),
   database: configService.get('DB_DATABASE'),
   entities: [User, Message, Conversation, ConversationParticipant],
-  migrations: [CreateChatEntities1739200000000],
+  migrations: [
+    CreateChatEntities1739200000000,
+    CreateUserStatus1739520000000,
+    UpdateMessageEntity1739520100000,
+  ],
   synchronize: false,
   logging: configService.get('NODE_ENV') === 'development',
 });

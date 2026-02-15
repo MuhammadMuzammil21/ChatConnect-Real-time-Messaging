@@ -3,6 +3,8 @@ import { List, Avatar, Badge, Typography, Space } from 'antd';
 import { UserOutlined, TeamOutlined } from '@ant-design/icons';
 import type { Conversation } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
+import { OnlineStatusBadge, UserStatusEnum } from './OnlineStatusBadge';
+import { useWebSocket } from '../contexts/WebSocketContext';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -15,6 +17,7 @@ interface ConversationItemProps {
     isSelected?: boolean;
     onClick: (conversation: Conversation) => void;
     currentUserId: string;
+    unreadCount?: number;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
@@ -22,7 +25,10 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     isSelected = false,
     onClick,
     currentUserId,
+    unreadCount = 0,
 }) => {
+    const { getUserStatus } = useWebSocket();
+
     // Get conversation display name
     const getConversationName = (): string => {
         if (conversation.type === ConversationType.GROUP) {
@@ -44,8 +50,32 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         .slice(0, 3)
         .map((p) => p.user);
 
-    // Calculate unread count (placeholder - will be implemented with real-time updates)
-    const unreadCount = 0;
+    // Get other user's status for direct conversations
+    const getOtherUserStatus = (): UserStatusEnum => {
+        if (conversation.type === ConversationType.DIRECT) {
+            const otherParticipant = conversation.participants.find(
+                (p) => p.user.id !== currentUserId
+            );
+            if (otherParticipant) {
+                const status = getUserStatus(otherParticipant.user.id);
+                return status?.status || UserStatusEnum.OFFLINE;
+            }
+        }
+        return UserStatusEnum.OFFLINE;
+    };
+
+    const getOtherUserLastSeen = (): Date | undefined => {
+        if (conversation.type === ConversationType.DIRECT) {
+            const otherParticipant = conversation.participants.find(
+                (p) => p.user.id !== currentUserId
+            );
+            if (otherParticipant) {
+                const status = getUserStatus(otherParticipant.user.id);
+                return status?.lastSeen;
+            }
+        }
+        return undefined;
+    };
 
     return (
         <List.Item
@@ -69,14 +99,23 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                             ))}
                         </Avatar.Group>
                     ) : (
-                        <Avatar
-                            size="large"
-                            src={participantAvatars[0]?.avatarUrl}
-                            icon={<UserOutlined />}
-                        >
-                            {!participantAvatars[0]?.avatarUrl &&
-                                participantAvatars[0]?.displayName[0].toUpperCase()}
-                        </Avatar>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <Avatar
+                                size="large"
+                                src={participantAvatars[0]?.avatarUrl}
+                                icon={<UserOutlined />}
+                            >
+                                {!participantAvatars[0]?.avatarUrl &&
+                                    participantAvatars[0]?.displayName[0].toUpperCase()}
+                            </Avatar>
+                            <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
+                                <OnlineStatusBadge
+                                    status={getOtherUserStatus()}
+                                    lastSeen={getOtherUserLastSeen()}
+                                    size="small"
+                                />
+                            </div>
+                        </div>
                     )
                 }
                 title={
