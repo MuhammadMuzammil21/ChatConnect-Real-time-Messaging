@@ -46,7 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   async handleConnection(@ConnectedSocket() client: Socket) {
     // Guards do not run before handleConnection in NestJS WebSockets, so we authenticate here.
@@ -236,16 +236,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleSendConversationMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: { conversationId: string; content: string; messageType?: MessageType },
+    payload: { conversationId: string; content: string; messageType?: MessageType; fileIds?: string[] },
   ): Promise<{ event: string; data: any }> {
     const userId = this.socketToUser.get(client.id);
     if (!userId) {
       throw new WsException('Unauthorized');
     }
 
-    const { conversationId, content, messageType } = payload || {};
-    if (!conversationId || !content || !content.trim()) {
-      throw new WsException('conversationId and non-empty content are required');
+    const { conversationId, content, messageType, fileIds } = payload || {};
+    if (!conversationId || (!content?.trim() && (!fileIds || fileIds.length === 0))) {
+      throw new WsException('conversationId and either content or fileIds are required');
     }
 
     if (!this.messageRateLimitService.tryAcquire(userId)) {
@@ -262,8 +262,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       message = await this.conversationsService.createMessage(
         conversationId,
         userId,
-        content.trim(),
+        content?.trim() || '',
         messageType ?? MessageType.TEXT,
+        fileIds,
       );
     } catch (error: any) {
       this.logger.error(
@@ -277,9 +278,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: message.id,
       content: message.content,
       senderId: message.sender.id,
+      senderName: message.sender.displayName,
+      senderAvatar: message.sender.avatarUrl,
       conversationId,
       messageType: message.messageType,
       createdAt: message.createdAt,
+      attachments: message.attachments || [],
     };
 
     this.server.to(roomName).emit('conversationMessage', payloadToBroadcast);

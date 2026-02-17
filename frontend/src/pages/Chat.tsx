@@ -9,7 +9,7 @@ import { ConversationHeader } from '../components/ConversationHeader';
 import { CreateConversationModal } from '../components/CreateConversationModal';
 import { ParticipantList } from '../components/ParticipantList';
 import { MessageList } from '../components/MessageList';
-import { MessageInput } from '../components/MessageInput';
+import { MessageInputWithFiles } from '../components/MessageInputWithFiles';
 import { MessageSearch } from '../components/MessageSearch';
 import { useConversations } from '../hooks/useConversations';
 import { useMessages } from '../hooks/useMessages';
@@ -61,12 +61,12 @@ export const Chat: React.FC = () => {
         setEditingMessage(null);
     };
 
-    const handleSendOrEdit = async (content: string) => {
+    const handleSendOrEdit = async (content: string, fileIds?: string[]) => {
         if (editingMessage) {
             await editMessage(editingMessage.id, content);
             setEditingMessage(null);
         } else {
-            await sendMessage(content);
+            await sendMessage(content, fileIds);
         }
     };
 
@@ -229,7 +229,7 @@ export const Chat: React.FC = () => {
                             />
 
                             {/* Message Input */}
-                            <MessageInput
+                            <MessageInputWithFiles
                                 onSend={handleSendOrEdit}
                                 conversationId={selectedConversation.id}
                                 loading={sending || editingMessageId !== null}
@@ -237,6 +237,7 @@ export const Chat: React.FC = () => {
                                 initialValue={editingMessage?.content}
                                 placeholder={editingMessage ? 'Edit message...' : 'Type a message...'}
                                 onCancel={editingMessage ? handleCancelEdit : undefined}
+                                enableFileUpload={!editingMessage}
                             />
                         </>
                     ) : (

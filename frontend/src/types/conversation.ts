@@ -40,6 +40,13 @@ export interface Message {
     updatedAt: string;
     deletedAt?: string | null;
     editedAt?: string | null;
+    attachments?: Array<{
+        id: string;
+        filename: string;
+        fileUrl: string;
+        mimeType: string;
+        fileSize: number;
+    }>;
 }
 
 export interface Conversation {

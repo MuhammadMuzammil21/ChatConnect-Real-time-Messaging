@@ -4,6 +4,7 @@ import { UserOutlined, CheckOutlined, MoreOutlined } from '@ant-design/icons';
 import type { Message } from '../types/conversation';
 import { MessageContextMenu } from './MessageContextMenu';
 import { DeleteMessageModal } from './DeleteMessageModal';
+import { FileAttachment } from './FileAttachment';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
@@ -127,13 +128,28 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                                 whiteSpace: 'pre-wrap',
                             }}
                         >
-                            <Text
-                                style={{
-                                    color: isOwnMessage ? 'white' : 'inherit',
-                                }}
-                            >
-                                {message.content}
-                            </Text>
+                            {message.content && (
+                                <Text
+                                    style={{
+                                        color: isOwnMessage ? 'white' : 'inherit',
+                                    }}
+                                >
+                                    {message.content}
+                                </Text>
+                            )}
+
+                            {/* File Attachments */}
+                            {message.attachments && message.attachments.length > 0 && (
+                                <div style={{ marginTop: message.content ? 8 : 0 }}>
+                                    {message.attachments.map((file) => (
+                                        <FileAttachment
+                                            key={file.id}
+                                            file={file}
+                                            compact
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Context Menu Trigger */}

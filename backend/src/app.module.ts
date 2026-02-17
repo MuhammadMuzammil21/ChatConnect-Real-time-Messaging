@@ -8,6 +8,7 @@ import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
 import { UserStatus } from './entities/user-status.entity';
+import { File } from './entities/file.entity';
 import { AuthModule } from './auth/auth.module';
 import { DemoModule } from './demo/demo.module';
 import { UsersModule } from './users/users.module';
@@ -15,6 +16,7 @@ import { ProfileModule } from './profile/profile.module';
 import { ChatModule } from './chat/chat.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { UserStatusModule } from './user-status/user-status.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -31,7 +33,7 @@ import { UserStatusModule } from './user-status/user-status.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Message, Conversation, ConversationParticipant, UserStatus],
+        entities: [User, Message, Conversation, ConversationParticipant, UserStatus, File],
         synchronize: configService.get('NODE_ENV') === 'development', // Auto-sync in development only
         logging: configService.get('NODE_ENV') === 'development',
       }),
@@ -44,6 +46,7 @@ import { UserStatusModule } from './user-status/user-status.module';
     ChatModule,
     ConversationsModule,
     UserStatusModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

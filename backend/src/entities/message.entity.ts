@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   Index,
   DeleteDateColumn,
   JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Conversation } from './conversation.entity';
+import { File } from './file.entity';
 
 export enum MessageType {
   TEXT = 'TEXT',
@@ -59,6 +61,9 @@ export class Message {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'deleted_by_id' })
   deletedBy: User | null;
+
+  @OneToMany(() => File, (file) => file.message, { eager: true })
+  attachments: File[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

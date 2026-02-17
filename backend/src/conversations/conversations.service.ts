@@ -265,14 +265,16 @@ export class ConversationsService {
     senderId: string,
     content: string,
     messageType: MessageType = MessageType.TEXT,
+    fileIds?: string[],
   ): Promise<Message> {
     const trimmedContent = (content ?? '').trim();
 
-    if (!trimmedContent) {
-      throw new BadRequestException('Message content cannot be empty');
+    // Allow empty content if there are file attachments
+    if (!trimmedContent && (!fileIds || fileIds.length === 0)) {
+      throw new BadRequestException('Message must have content or file attachments');
     }
 
-    if (trimmedContent.length > MAX_MESSAGE_LENGTH) {
+    if (trimmedContent && trimmedContent.length > MAX_MESSAGE_LENGTH) {
       throw new BadRequestException(
         `Message content cannot exceed ${MAX_MESSAGE_LENGTH} characters`,
       );
@@ -303,7 +305,34 @@ export class ConversationsService {
       messageType,
     });
 
-    return this.messageRepository.save(message);
+    const savedMessage = await this.messageRepository.save(message);
+
+    // Associate files with the message if fileIds provided
+    if (fileIds && fileIds.length > 0) {
+      // Import File entity
+      const { File } = await import('../entities/file.entity.js');
+      const fileRepository = this.messageRepository.manager.getRepository(File);
+
+      // Update files to associate with this message
+      await fileRepository.update(
+        { id: In(fileIds), uploadedBy: { id: senderId } },
+        { message: savedMessage },
+      );
+
+      // Reload message with attachments
+      const reloadedMessage = await this.messageRepository.findOne({
+        where: { id: savedMessage.id },
+        relations: ['sender', 'attachments'],
+      });
+
+      if (!reloadedMessage) {
+        throw new NotFoundException('Failed to reload message with attachments');
+      }
+
+      return reloadedMessage;
+    }
+
+    return savedMessage;
   }
 
   async getMessageHistory(

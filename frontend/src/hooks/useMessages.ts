@@ -71,14 +71,15 @@ export const useMessages = ({ conversationId, currentUserId }: UseMessagesOption
 
     // Send message
     const sendMessage = useCallback(
-        async (content: string) => {
-            if (!conversationId || !content.trim()) return;
+        async (content: string, fileIds?: string[]) => {
+            if (!conversationId || (!content.trim() && (!fileIds || fileIds.length === 0))) return;
 
             setSending(true);
             try {
                 emit('sendConversationMessage', {
                     conversationId,
                     content: content.trim(),
+                    fileIds,
                 });
             } catch (error: any) {
                 console.error('Failed to send message:', error);
@@ -183,6 +184,7 @@ export const useMessages = ({ conversationId, currentUserId }: UseMessagesOption
                     isEdited: false,
                     createdAt: data.createdAt,
                     updatedAt: data.createdAt,
+                    attachments: data.attachments || [],
                 };
 
                 setMessages((prev) => [...prev, newMessage]);
