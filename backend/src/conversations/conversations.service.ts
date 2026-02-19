@@ -3,6 +3,8 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, In, MoreThan, Repository, IsNull, Between, Like, ILike } from 'typeorm';
@@ -10,11 +12,15 @@ import { Conversation, ConversationType } from '../entities/conversation.entity'
 import { ConversationParticipant } from '../entities/conversation-participant.entity';
 import { Message, MessageType } from '../entities/message.entity';
 import { User } from '../entities/user.entity';
+import { File } from '../entities/file.entity';
+import { FilesService } from '../files/files.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { AddParticipantDto } from './dto/add-participant.dto';
 import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { SearchMessagesDto } from './dto/search-messages.dto';
+import { GetMediaQueryDto, MediaType, MediaSortBy, MediaSortOrder } from './dto/get-media-query.dto';
+import { MediaResponseDto, MediaStatisticsDto } from './dto/media-response.dto';
 
 const MAX_GROUP_PARTICIPANTS = 50;
 const MAX_MESSAGE_LENGTH = 2000;
@@ -32,6 +38,10 @@ export class ConversationsService {
     private readonly messageRepository: Repository<Message>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(File)
+    private readonly fileRepository: Repository<File>,
+    @Inject(forwardRef(() => FilesService))
+    private readonly filesService: FilesService,
   ) { }
 
   async createConversation(
@@ -351,11 +361,36 @@ export class ConversationsService {
     const requestedLimit = query.limit && query.limit > 0 ? query.limit : 50;
     const limit = Math.min(requestedLimit, 100);
 
+    // Optimized query with select to reduce data transfer
     const [items, total] = await this.messageRepository.findAndCount({
       where: {
         conversation: { id: conversationId },
       },
-      relations: ['sender'],
+      relations: ['sender', 'attachments'],
+      select: {
+        id: true,
+        content: true,
+        messageType: true,
+        isRead: true,
+        isEdited: true,
+        editedAt: true,
+        deletedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        sender: {
+          id: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+        attachments: {
+          id: true,
+          filename: true,
+          fileUrl: true,
+          thumbnailUrl: true,
+          mimeType: true,
+          fileSize: true,
+        },
+      },
       order: {
         createdAt: 'DESC',
       },
@@ -458,10 +493,35 @@ export class ConversationsService {
 
   /**
    * Sanitize message content to prevent XSS attacks
+   * Improved version with better HTML sanitization and link detection
    */
   private sanitizeContent(content: string): string {
-    // Strip HTML tags
-    let sanitized = content.replace(/<[^>]*>/g, '');
+    if (!content || typeof content !== 'string') {
+      return '';
+    }
+
+    // Remove null bytes and control characters
+    let sanitized = content.replace(/[\x00-\x1F\x7F]/g, '');
+
+    // Strip script tags and event handlers more aggressively
+    sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, ''); // Remove event handlers
+    sanitized = sanitized.replace(/javascript:/gi, ''); // Remove javascript: protocol
+    sanitized = sanitized.replace(/data:text\/html/gi, ''); // Remove data URIs
+
+    // Strip HTML tags but preserve basic formatting if needed
+    // For now, strip all HTML for security
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+
+    // Decode HTML entities first, then re-escape
+    sanitized = sanitized
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'")
+      .replace(/&#x2F;/g, '/');
 
     // Trim whitespace
     sanitized = sanitized.trim();
@@ -472,7 +532,11 @@ export class ConversationsService {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;');
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+
+    // Remove excessive whitespace
+    sanitized = sanitized.replace(/\s+/g, ' ');
 
     return sanitized;
   }
@@ -541,7 +605,7 @@ export class ConversationsService {
   ): Promise<{ success: boolean }> {
     const message = await this.messageRepository.findOne({
       where: { id: messageId },
-      relations: ['sender'],
+      relations: ['sender', 'attachments'],
     });
 
     if (!message) {
@@ -562,6 +626,12 @@ export class ConversationsService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Delete associated files if any
+    if (message.attachments && message.attachments.length > 0) {
+      // Delete files using FilesService which handles storage cleanup
+      await this.filesService.deleteFilesByMessageId(messageId);
     }
 
     // Soft delete the message
@@ -641,8 +711,9 @@ export class ConversationsService {
     // Get total count
     const total = await queryBuilder.getCount();
 
-    // Get paginated results
+    // Get paginated results with attachments
     const items = await queryBuilder
+      .leftJoinAndSelect('message.attachments', 'attachments')
       .orderBy('message.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
@@ -653,6 +724,150 @@ export class ConversationsService {
       total,
       page,
       limit,
+    };
+  }
+
+  /**
+   * Get media files for a conversation with filtering, pagination, and sorting
+   */
+  async getConversationMedia(
+    conversationId: string,
+    userId: string,
+    query: GetMediaQueryDto,
+  ): Promise<MediaResponseDto> {
+    // Verify user is participant
+    await this.assertUserIsParticipant(conversationId, userId);
+
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const requestedLimit = query.limit && query.limit > 0 ? query.limit : 20;
+    const limit = Math.min(requestedLimit, 100);
+
+    // Build query
+    const queryBuilder = this.fileRepository
+      .createQueryBuilder('file')
+      .where('file.conversationId = :conversationId', { conversationId })
+      .andWhere('file.deletedAt IS NULL');
+
+    // Filter by media type
+    if (query.type && query.type !== MediaType.ALL) {
+      if (query.type === MediaType.IMAGE) {
+        queryBuilder.andWhere('file.mimeType LIKE :imagePattern', {
+          imagePattern: 'image/%',
+        });
+      } else if (query.type === MediaType.VIDEO) {
+        queryBuilder.andWhere('file.mimeType LIKE :videoPattern', {
+          videoPattern: 'video/%',
+        });
+      } else if (query.type === MediaType.DOCUMENT) {
+        queryBuilder.andWhere(
+          '(file.mimeType LIKE :docPattern OR file.mimeType LIKE :pdfPattern OR file.mimeType LIKE :textPattern)',
+          {
+            docPattern: 'application/%',
+            pdfPattern: 'application/pdf',
+            textPattern: 'text/%',
+          },
+        );
+        queryBuilder.andWhere('file.mimeType NOT LIKE :imagePattern', {
+          imagePattern: 'image/%',
+        });
+        queryBuilder.andWhere('file.mimeType NOT LIKE :videoPattern', {
+          videoPattern: 'video/%',
+        });
+      }
+    }
+
+    // Sorting
+    const sortBy = query.sortBy || MediaSortBy.DATE;
+    const sortOrder = query.sortOrder || MediaSortOrder.DESC;
+
+    switch (sortBy) {
+      case MediaSortBy.SIZE:
+        queryBuilder.orderBy('file.fileSize', sortOrder.toUpperCase() as 'ASC' | 'DESC');
+        break;
+      case MediaSortBy.TYPE:
+        queryBuilder.orderBy('file.mimeType', sortOrder.toUpperCase() as 'ASC' | 'DESC');
+        break;
+      case MediaSortBy.DATE:
+      default:
+        queryBuilder.orderBy('file.createdAt', sortOrder.toUpperCase() as 'ASC' | 'DESC');
+        break;
+    }
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Get paginated results
+    const items = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    // Convert to DTOs using FilesService
+    const fileDtos = items.map((file) => this.filesService.toResponseDto(file));
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items: fileDtos,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
+   * Get media statistics for a conversation
+   */
+  async getConversationMediaStatistics(
+    conversationId: string,
+    userId: string,
+  ): Promise<MediaStatisticsDto> {
+    // Verify user is participant
+    await this.assertUserIsParticipant(conversationId, userId);
+
+    // Get all files for the conversation
+    const files = await this.fileRepository.find({
+      where: {
+        conversationId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    // Calculate statistics
+    let totalFiles = files.length;
+    let totalImages = 0;
+    let totalVideos = 0;
+    let totalDocuments = 0;
+    let totalSize = 0;
+    let imagesSize = 0;
+    let videosSize = 0;
+    let documentsSize = 0;
+
+    for (const file of files) {
+      totalSize += file.fileSize || 0;
+
+      if (file.mimeType.startsWith('image/')) {
+        totalImages++;
+        imagesSize += file.fileSize || 0;
+      } else if (file.mimeType.startsWith('video/')) {
+        totalVideos++;
+        videosSize += file.fileSize || 0;
+      } else {
+        totalDocuments++;
+        documentsSize += file.fileSize || 0;
+      }
+    }
+
+    return {
+      totalFiles,
+      totalImages,
+      totalVideos,
+      totalDocuments,
+      totalSize,
+      imagesSize,
+      videosSize,
+      documentsSize,
     };
   }
 }

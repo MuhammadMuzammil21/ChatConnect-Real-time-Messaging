@@ -6,6 +6,7 @@ import {
     MoreOutlined,
     UsergroupAddOutlined,
     SearchOutlined,
+    PaperClipOutlined,
 } from '@ant-design/icons';
 import type { Conversation } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
@@ -19,6 +20,8 @@ interface ConversationHeaderProps {
     currentUserId: string;
     onShowParticipants: () => void;
     onOpenSearch?: () => void;
+    onToggleFiles?: () => void;
+    filesOpen?: boolean;
 }
 
 export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
@@ -26,6 +29,8 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
     currentUserId,
     onShowParticipants,
     onOpenSearch,
+    onToggleFiles,
+    filesOpen,
 }) => {
     const { getUserStatus } = useWebSocket();
 
@@ -153,6 +158,15 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                         icon={<SearchOutlined />}
                         onClick={onOpenSearch}
                         aria-label="Search messages in this conversation"
+                    />
+                )}
+                {onToggleFiles && (
+                    <Button
+                        type={filesOpen ? 'primary' : 'text'}
+                        icon={<PaperClipOutlined />}
+                        onClick={onToggleFiles}
+                        aria-label="View files and media"
+                        title="Files & Media"
                     />
                 )}
                 <Dropdown menu={{ items: menuItems }} trigger={['click']}>

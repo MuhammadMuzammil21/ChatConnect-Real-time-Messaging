@@ -8,6 +8,11 @@ import { ConversationParticipant } from './entities/conversation-participant.ent
 import { CreateChatEntities1739200000000 } from './migrations/1739200000000-CreateChatEntities';
 import { CreateUserStatus1739520000000 } from './migrations/1739520000000-CreateUserStatus';
 import { UpdateMessageEntity1739520100000 } from './migrations/1739520100000-UpdateMessageEntity';
+import { CreateFilesTable1739520150000 } from './migrations/1739520150000-CreateFilesTable';
+import { CreateFileDownload1739520200000 } from './migrations/1739520200000-CreateFileDownload';
+import { AddImageVariantsToFiles1739520300000 } from './migrations/1739520300000-AddImageVariantsToFiles';
+import { AddFileSharingAndVersioning1739520400000 } from './migrations/1739520400000-AddFileSharingAndVersioning';
+import { AddFileIndexes1739520500000 } from './migrations/1739520500000-AddFileIndexes';
 
 ConfigModule.forRoot({
   isGlobal: false,
@@ -28,6 +33,11 @@ export const AppDataSource = new DataSource({
     CreateChatEntities1739200000000,
     CreateUserStatus1739520000000,
     UpdateMessageEntity1739520100000,
+    CreateFilesTable1739520150000,
+    CreateFileDownload1739520200000,
+    AddImageVariantsToFiles1739520300000,
+    AddFileSharingAndVersioning1739520400000,
+    AddFileIndexes1739520500000,
   ],
   synchronize: false,
   logging: configService.get('NODE_ENV') === 'development',

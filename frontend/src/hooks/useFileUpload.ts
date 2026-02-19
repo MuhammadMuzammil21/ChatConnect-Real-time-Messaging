@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { message } from 'antd';
-import { filesApi, FileMetadata, FileUploadOptions } from '../api/files';
+import { filesApi } from '../api/files';
+import type { FileMetadata, FileUploadOptions } from '../api/files';
 
 // File size limits (in bytes)
 const FILE_SIZE_LIMITS = {

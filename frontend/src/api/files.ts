@@ -21,6 +21,20 @@ export interface FileMetadata {
     updatedAt: string;
 }
 
+export interface ShareLink {
+    id: string;
+    token: string;
+    shareUrl: string;
+    expiresAt: string | null;
+    createdAt: string;
+}
+
+export interface UserFileStatistics {
+    totalFiles: number;
+    totalSize: number;
+    byType: { mimeType: string; count: number; totalSize: number }[];
+}
+
 export const filesApi = {
     /**
      * Upload a file
@@ -153,6 +167,64 @@ export const filesApi = {
             }
         );
 
+        return response.data;
+    },
+
+    /** Generate a signed (time-limited) download URL */
+    generateSignedUrl: async (fileId: string, expiresIn?: number): Promise<{ signedUrl: string; expiresAt: Date }> => {
+        const token = localStorage.getItem('token');
+        const params = expiresIn ? `?expiresIn=${expiresIn}` : '';
+        const response = await axios.get(`${API_URL}/files/${fileId}/signed-url${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    },
+
+    /** Create a shareable public link for a file */
+    createShareLink: async (fileId: string, expiresIn?: number): Promise<ShareLink> => {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(
+            `${API_URL}/files/${fileId}/share-links`,
+            { expiresIn },
+            { headers: { Authorization: `Bearer ${token}` } },
+        );
+        return response.data;
+    },
+
+    /** List all share links for a file */
+    getShareLinks: async (fileId: string): Promise<ShareLink[]> => {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/files/${fileId}/share-links`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    },
+
+    /** Revoke a share link */
+    revokeShareLink: async (linkId: string): Promise<void> => {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_URL}/files/share-links/${linkId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    },
+
+    /** Rename a file */
+    renameFile: async (fileId: string, filename: string): Promise<FileMetadata> => {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(
+            `${API_URL}/files/${fileId}/rename`,
+            { filename },
+            { headers: { Authorization: `Bearer ${token}` } },
+        );
+        return response.data;
+    },
+
+    /** Get storage usage statistics for the current user */
+    getUserStatistics: async (): Promise<UserFileStatistics> => {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/files/user/statistics`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
         return response.data;
     },
 };

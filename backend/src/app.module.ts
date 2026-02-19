@@ -9,6 +9,8 @@ import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
 import { UserStatus } from './entities/user-status.entity';
 import { File } from './entities/file.entity';
+import { FileDownload } from './entities/file-download.entity';
+import { FileShareLink } from './entities/file-share-link.entity';
 import { AuthModule } from './auth/auth.module';
 import { DemoModule } from './demo/demo.module';
 import { UsersModule } from './users/users.module';
@@ -33,7 +35,7 @@ import { FilesModule } from './files/files.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Message, Conversation, ConversationParticipant, UserStatus, File],
+        entities: [User, Message, Conversation, ConversationParticipant, UserStatus, File, FileDownload, FileShareLink],
         synchronize: configService.get('NODE_ENV') === 'development', // Auto-sync in development only
         logging: configService.get('NODE_ENV') === 'development',
       }),

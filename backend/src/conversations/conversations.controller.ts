@@ -30,6 +30,8 @@ import { UnreadCountDto } from './dto/unread-count.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { SearchMessagesDto } from './dto/search-messages.dto';
 import { Message } from '../entities/message.entity';
+import { GetMediaQueryDto } from './dto/get-media-query.dto';
+import { MediaResponseDto, MediaStatisticsDto } from './dto/media-response.dto';
 
 @ApiTags('conversations')
 @ApiBearerAuth('JWT-auth')
@@ -234,6 +236,39 @@ export class ConversationsController {
     @Query() dto: SearchMessagesDto,
   ): Promise<PaginatedMessagesResponseDto> {
     return this.conversationsService.searchMessages(id, user.id, dto);
+  }
+
+  @Get(':id/media')
+  @UseGuards(ConversationParticipantGuard)
+  @ApiOperation({ summary: 'Get media files for a conversation' })
+  @ApiParam({ name: 'id', description: 'Conversation ID', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Media files retrieved successfully',
+    type: MediaResponseDto,
+  })
+  async getConversationMedia(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Query() query: GetMediaQueryDto,
+  ): Promise<MediaResponseDto> {
+    return this.conversationsService.getConversationMedia(id, user.id, query);
+  }
+
+  @Get(':id/media/statistics')
+  @UseGuards(ConversationParticipantGuard)
+  @ApiOperation({ summary: 'Get media statistics for a conversation' })
+  @ApiParam({ name: 'id', description: 'Conversation ID', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Media statistics retrieved successfully',
+    type: MediaStatisticsDto,
+  })
+  async getConversationMediaStatistics(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<MediaStatisticsDto> {
+    return this.conversationsService.getConversationMediaStatistics(id, user.id);
   }
 }
 

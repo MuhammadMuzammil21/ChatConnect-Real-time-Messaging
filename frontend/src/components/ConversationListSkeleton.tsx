@@ -7,7 +7,7 @@ export const ConversationListSkeleton: React.FC = () => {
         <div className="conversation-list-skeleton">
             <List
                 dataSource={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-                renderItem={(item) => (
+                renderItem={(_item) => (
                     <List.Item className="skeleton-conversation-item">
                         <Skeleton.Avatar active size="large" />
                         <div className="skeleton-conversation-content">

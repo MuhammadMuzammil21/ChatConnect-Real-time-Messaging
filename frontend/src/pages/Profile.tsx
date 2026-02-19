@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, Button, Form, Input, Spin, message, Layout, Row, Col, Avatar } from 'antd';
-import { EditOutlined, SaveOutlined, CloseOutlined, ArrowLeftOutlined, UserOutlined, MessageOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Input, Spin, message, Layout, Row, Col } from 'antd';
+import { EditOutlined, SaveOutlined, CloseOutlined, ArrowLeftOutlined, MessageOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { profileApi, type ProfileData, type UpdateProfileData } from '../api/profile';

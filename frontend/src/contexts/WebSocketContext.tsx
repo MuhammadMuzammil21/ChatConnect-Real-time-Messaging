@@ -44,8 +44,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     const [userStatuses, setUserStatuses] = useState<Map<string, UserStatus>>(new Map());
     const [unreadCounts, setUnreadCountsState] = useState<Record<string, number>>({});
     const [heartbeatInterval, setHeartbeatInterval] = useState<number | null>(null);
+    // Track first-ever connection so we only show the 'connected' toast once,
+    // not on every automatic reconnect.
+    const hasConnectedOnce = React.useRef(false);
 
     const connect = useCallback(() => {
+        // Guard: don't create a second socket if one is already alive
+        if (socket && socket.connected) {
+            console.log('Socket already connected, skipping duplicate connect()');
+            return;
+        }
+
         // Get token from localStorage
         const token = localStorage.getItem('accessToken');
 
@@ -70,7 +79,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         newSocket.on('connect', () => {
             console.log('WebSocket connected:', newSocket.id);
             setIsConnected(true);
-            antdMessage.success('Connected to chat server');
+            // Only show toast on the very first connection, not on silent auto-reconnects
+            if (!hasConnectedOnce.current) {
+                hasConnectedOnce.current = true;
+                antdMessage.success('Connected to chat server');
+            }
         });
 
         newSocket.on('disconnect', (reason) => {
@@ -89,9 +102,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
             if (error.message.includes('Unauthorized') || error.message.includes('auth')) {
                 antdMessage.error('Authentication failed. Please login again.');
-            } else {
-                antdMessage.error('Failed to connect to chat server');
             }
+            // Do NOT show a toast on every transient connect_error (fires on each retry),
+            // the reconnect_failed event below handles the final failure toast.
         });
 
         newSocket.on('reconnect', (attemptNumber) => {

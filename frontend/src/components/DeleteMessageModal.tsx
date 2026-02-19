@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal, Typography } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import type { Message } from '../types/message';

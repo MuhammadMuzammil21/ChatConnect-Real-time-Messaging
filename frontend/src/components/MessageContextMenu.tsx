@@ -1,11 +1,11 @@
 import React from 'react';
-import { Dropdown, Menu, message as antMessage } from 'antd';
+import { Dropdown, message as antMessage } from 'antd';
 import {
     EditOutlined,
     DeleteOutlined,
     CopyOutlined,
-    MoreOutlined,
 } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import type { Message } from '../types/message';
 import './MessageContextMenu.css';
 
@@ -18,7 +18,6 @@ interface MessageContextMenuProps {
 }
 
 const MESSAGE_EDIT_TIME_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
-const MESSAGE_DELETE_TIME_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 
 export const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
     message,
@@ -37,39 +36,38 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
         antMessage.success('Message copied to clipboard');
     };
 
-    const menu = (
-        <Menu>
-            {canEdit && (
-                <Menu.Item
-                    key="edit"
-                    icon={<EditOutlined />}
-                    onClick={() => onEdit(message)}
-                >
-                    Edit
-                </Menu.Item>
-            )}
-            {canDelete && (
-                <Menu.Item
-                    key="delete"
-                    icon={<DeleteOutlined />}
-                    onClick={() => onDelete(message)}
-                    danger
-                >
-                    Delete
-                </Menu.Item>
-            )}
-            <Menu.Item
-                key="copy"
-                icon={<CopyOutlined />}
-                onClick={handleCopy}
-            >
-                Copy
-            </Menu.Item>
-        </Menu>
-    );
+    const items: MenuProps['items'] = [
+        ...(canEdit
+            ? [
+                {
+                    key: 'edit',
+                    icon: <EditOutlined />,
+                    label: 'Edit',
+                    onClick: () => onEdit(message),
+                } as const,
+            ]
+            : []),
+        ...(canDelete
+            ? [
+                {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () => onDelete(message),
+                } as const,
+            ]
+            : []),
+        {
+            key: 'copy',
+            icon: <CopyOutlined />,
+            label: 'Copy',
+            onClick: handleCopy,
+        },
+    ];
 
     return (
-        <Dropdown overlay={menu} trigger={['click']} placement="bottomRight">
+        <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             {children}
         </Dropdown>
     );

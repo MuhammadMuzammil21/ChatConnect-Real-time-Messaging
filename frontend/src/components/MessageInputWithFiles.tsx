@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input, Button, Space, Typography } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
@@ -22,6 +21,8 @@ interface MessageInputProps {
     placeholder?: string; // Custom placeholder
     onCancel?: () => void; // Cancel edit mode
     enableFileUpload?: boolean; // Enable/disable file upload
+    droppedFiles?: File[]; // Files dragged/pasted from outside
+    onDroppedFilesConsumed?: () => void; // Called after droppedFiles are consumed
 }
 
 export const MessageInputWithFiles: React.FC<MessageInputProps> = ({
@@ -34,6 +35,8 @@ export const MessageInputWithFiles: React.FC<MessageInputProps> = ({
     placeholder = 'Type a message...',
     onCancel,
     enableFileUpload = true,
+    droppedFiles,
+    onDroppedFilesConsumed,
 }) => {
     const [content, setContent] = useState(initialValue || '');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -60,6 +63,15 @@ export const MessageInputWithFiles: React.FC<MessageInputProps> = ({
             }, 100);
         }
     }, [initialValue]);
+
+    // Consume droppedFiles from drag-drop / paste
+    useEffect(() => {
+        if (droppedFiles && droppedFiles.length > 0 && enableFileUpload) {
+            setSelectedFiles(prev => [...prev, ...droppedFiles]);
+            onDroppedFilesConsumed?.();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [droppedFiles]);
 
     const handleSend = async () => {
         const trimmed = content.trim();
@@ -224,21 +236,28 @@ export const MessageInputWithFiles: React.FC<MessageInputProps> = ({
                             </Text>
                         )}
                     </div>
-                    <Button
-                        type="primary"
-                        icon={<SendOutlined />}
-                        onClick={handleSend}
-                        disabled={
-                            disabled ||
-                            loading ||
-                            isUploading ||
-                            (!content.trim() && uploadedFileMetadata.length === 0) ||
-                            isOverLimit
-                        }
-                        loading={loading || isUploading}
-                    >
-                        Send
-                    </Button>
+                    <Space>
+                        {onCancel && initialValue !== undefined && (
+                            <Button onClick={onCancel} disabled={disabled || loading || isUploading}>
+                                Cancel
+                            </Button>
+                        )}
+                        <Button
+                            type="primary"
+                            icon={<SendOutlined />}
+                            onClick={handleSend}
+                            disabled={
+                                disabled ||
+                                loading ||
+                                isUploading ||
+                                (!content.trim() && uploadedFileMetadata.length === 0) ||
+                                isOverLimit
+                            }
+                            loading={loading || isUploading}
+                        >
+                            Send
+                        </Button>
+                    </Space>
                 </div>
             </Space>
         </div>

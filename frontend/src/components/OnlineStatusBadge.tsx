@@ -1,12 +1,14 @@
-import React from 'react';
-import { Badge, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
 import { formatDistanceToNow } from 'date-fns';
+import './OnlineStatusBadge.css';
 
-export enum UserStatusEnum {
-    ONLINE = 'ONLINE',
-    OFFLINE = 'OFFLINE',
-    AWAY = 'AWAY',
-}
+export const UserStatusEnum = {
+    ONLINE: 'ONLINE',
+    OFFLINE: 'OFFLINE',
+    AWAY: 'AWAY',
+} as const;
+
+export type UserStatusEnum = typeof UserStatusEnum[keyof typeof UserStatusEnum];
 
 interface OnlineStatusBadgeProps {
     status: UserStatusEnum;
@@ -68,7 +70,7 @@ export const OnlineStatusBadge: React.FC<OnlineStatusBadgeProps> = ({
         borderRadius: '50%',
         border: '2px solid white',
         boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.1)',
-        animation: status === UserStatusEnum.ONLINE ? 'pulse 2s infinite' : 'none',
+        animation: status === UserStatusEnum.ONLINE ? 'online-status-pulse 2s infinite' : 'none',
     };
 
     const badge = (
@@ -81,21 +83,3 @@ export const OnlineStatusBadge: React.FC<OnlineStatusBadgeProps> = ({
 
     return badge;
 };
-
-// Add this to your global CSS or component CSS
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.7;
-        }
-    }
-    
-    .online-status-badge {
-        display: inline-block;
-    }
-`;
-document.head.appendChild(style);

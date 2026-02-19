@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input, Button, Space, Typography } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
@@ -151,15 +150,22 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                             </Text>
                         )}
                     </div>
-                    <Button
-                        type="primary"
-                        icon={<SendOutlined />}
-                        onClick={handleSend}
-                        disabled={disabled || loading || !content.trim() || isOverLimit}
-                        loading={loading}
-                    >
-                        Send
-                    </Button>
+                    <Space>
+                        {onCancel && initialValue !== undefined && (
+                            <Button onClick={onCancel} disabled={disabled || loading}>
+                                Cancel
+                            </Button>
+                        )}
+                        <Button
+                            type="primary"
+                            icon={<SendOutlined />}
+                            onClick={handleSend}
+                            disabled={disabled || loading || !content.trim() || isOverLimit}
+                            loading={loading}
+                        >
+                            Send
+                        </Button>
+                    </Space>
                 </div>
             </Space>
         </div>

@@ -25,6 +25,36 @@ export class FileResponseDto {
     @ApiProperty({ required: false })
     messageId?: string;
 
+    @ApiProperty({ required: false })
+    thumbnailUrl?: string;
+
+    @ApiProperty({ required: false })
+    mediumUrl?: string;
+
+    @ApiProperty({ required: false })
+    fullUrl?: string;
+
+    @ApiProperty({ required: false })
+    imageWidth?: number;
+
+    @ApiProperty({ required: false })
+    imageHeight?: number;
+
+    @ApiProperty({ required: false })
+    videoDuration?: number;
+
+    @ApiProperty({ required: false })
+    videoThumbnailUrl?: string;
+
+    @ApiProperty({ required: false })
+    version?: number;
+
+    @ApiProperty({ required: false })
+    parentFileId?: string;
+
+    @ApiProperty({ required: false })
+    description?: string;
+
     @ApiProperty()
     createdAt: Date;
 

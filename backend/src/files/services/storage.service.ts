@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LocalStorageService } from './local-storage.service';
 import { IStorageProvider } from '../interfaces/storage.interface';
 import { storageConfig } from '../config/storage.config';
+import type { Readable } from 'stream';
 
 @Injectable()
 export class StorageService {
@@ -32,5 +33,13 @@ export class StorageService {
 
     getFileUrl(storedFilename: string): string {
         return this.provider.getFileUrl(storedFilename);
+    }
+
+    async getFileStream(storedFilename: string): Promise<Readable> {
+        return this.provider.getFileStream(storedFilename);
+    }
+
+    async getFileMetadata(storedFilename: string): Promise<{ size: number; mimeType: string }> {
+        return this.provider.getFileMetadata(storedFilename);
     }
 }

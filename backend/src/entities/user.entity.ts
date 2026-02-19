@@ -57,6 +57,12 @@ export class User {
     @Column({ name: 'refresh_token', nullable: true, type: 'text' })
     refreshToken: string | null;
 
+    @Column({ name: 'storage_quota', type: 'bigint', default: 10737418240 })
+    storageQuota: number; // Storage quota in bytes (default 10GB)
+
+    @Column({ name: 'storage_used', type: 'bigint', default: 0 })
+    storageUsed: number; // Storage used in bytes
+
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 

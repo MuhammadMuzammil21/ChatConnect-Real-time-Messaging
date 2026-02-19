@@ -11,7 +11,7 @@ const { Header, Content } = Layout;
 function Dashboard() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const { isFree, isPremium, isAdmin } = useRole();
+    const { isPremium, isAdmin } = useRole();
 
     const handleLogout = async () => {
         await logout();
@@ -174,7 +174,14 @@ function Dashboard() {
                             >
                                 <Statistic
                                     title="Member Since"
-                                    value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    value={
+                                        user.createdAt
+                                            ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                year: 'numeric',
+                                            })
+                                            : '—'
+                                    }
                                     prefix={<ClockCircleOutlined style={{ color: '#6366f1' }} />}
                                     valueStyle={{ color: '#1f2937', fontSize: '20px', fontWeight: 600 }}
                                 />

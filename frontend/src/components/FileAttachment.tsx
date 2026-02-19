@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Typography, Space, Button, Tag, Tooltip } from 'antd';
 import {
     FileOutlined,
@@ -10,9 +10,10 @@ import {
     VideoCameraOutlined,
     DownloadOutlined,
     EyeOutlined,
+    ShareAltOutlined,
 } from '@ant-design/icons';
-import type { FileMetadata } from '../api/files';
 import { filesApi } from '../api/files';
+import { ShareFileModal } from './ShareFileModal';
 
 const { Text } = Typography;
 
@@ -93,6 +94,8 @@ const getFileColor = (mimeType: string): string => {
 };
 
 export const FileAttachment: React.FC<FileAttachmentProps> = ({ file, compact = false }) => {
+    const [shareOpen, setShareOpen] = useState(false);
+
     const handleDownload = async () => {
         try {
             await filesApi.downloadFile(file.id, file.filename);
@@ -102,145 +105,136 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({ file, compact = 
     };
 
     const handleView = () => {
-        // Open file in new tab
         window.open(file.fileUrl, '_blank');
     };
+
+    const handleShare = () => setShareOpen(true);
 
     const isImage = file.mimeType.startsWith('image/');
     const isVideo = file.mimeType.startsWith('video/');
 
     if (compact) {
         return (
-            <Card
-                size="small"
-                style={{
-                    marginBottom: 4,
-                    cursor: 'pointer',
-                    borderColor: '#d9d9d9',
-                }}
-                bodyStyle={{ padding: 8 }}
-                onClick={isImage || isVideo ? handleView : handleDownload}
-                hoverable
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {getFileIcon(file.mimeType)}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <Text
-                            ellipsis
-                            style={{ display: 'block', fontSize: 13, marginBottom: 2 }}
-                        >
-                            {file.filename}
-                        </Text>
-                        <Space size={4}>
-                            <Tag color={getFileColor(file.mimeType)} style={{ fontSize: 11, margin: 0 }}>
-                                {getFileTypeLabel(file.mimeType)}
-                            </Tag>
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                                {formatFileSize(file.fileSize)}
+            <>
+                <Card
+                    size="small"
+                    style={{ marginBottom: 4, cursor: 'pointer', borderColor: '#d9d9d9' }}
+                    styles={{ body: { padding: 8 } }}
+                    onClick={isImage || isVideo ? handleView : handleDownload}
+                    hoverable
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {getFileIcon(file.mimeType)}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <Text ellipsis style={{ display: 'block', fontSize: 13, marginBottom: 2 }}>
+                                {file.filename}
                             </Text>
-                        </Space>
+                            <Space size={4}>
+                                <Tag color={getFileColor(file.mimeType)} style={{ fontSize: 11, margin: 0 }}>
+                                    {getFileTypeLabel(file.mimeType)}
+                                </Tag>
+                                <Text type="secondary" style={{ fontSize: 11 }}>
+                                    {formatFileSize(file.fileSize)}
+                                </Text>
+                            </Space>
+                        </div>
+                        <Tooltip title={isImage || isVideo ? 'View' : 'Download'}>
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={isImage || isVideo ? <EyeOutlined /> : <DownloadOutlined />}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    isImage || isVideo ? handleView() : handleDownload();
+                                }}
+                            />
+                        </Tooltip>
+                        <Tooltip title="Share">
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<ShareAltOutlined />}
+                                onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                            />
+                        </Tooltip>
                     </div>
-                    <Tooltip title={isImage || isVideo ? 'View' : 'Download'}>
-                        <Button
-                            type="text"
-                            size="small"
-                            icon={isImage || isVideo ? <EyeOutlined /> : <DownloadOutlined />}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                isImage || isVideo ? handleView() : handleDownload();
-                            }}
-                        />
-                    </Tooltip>
-                </div>
-            </Card>
+                </Card>
+                <ShareFileModal file={file} open={shareOpen} onClose={() => setShareOpen(false)} />
+            </>
         );
     }
 
     // Full size display with image/video preview
     return (
-        <Card
-            size="small"
-            style={{
-                marginBottom: 8,
-                maxWidth: 400,
-            }}
-            bodyStyle={{ padding: 12 }}
-        >
-            {isImage && (
-                <img
-                    src={file.fileUrl}
-                    alt={file.filename}
-                    style={{
-                        width: '100%',
-                        maxHeight: 200,
-                        objectFit: 'cover',
-                        borderRadius: 4,
-                        marginBottom: 8,
-                        cursor: 'pointer',
-                    }}
-                    onClick={handleView}
-                />
-            )}
-            {isVideo && (
-                <video
-                    src={file.fileUrl}
-                    controls
-                    style={{
-                        width: '100%',
-                        maxHeight: 200,
-                        borderRadius: 4,
-                        marginBottom: 8,
-                    }}
-                />
-            )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {!isImage && !isVideo && (
-                    <div
+        <>
+            <Card
+                size="small"
+                style={{ marginBottom: 8, maxWidth: 400 }}
+                styles={{ body: { padding: 12 } }}
+            >
+                {isImage && (
+                    <img
+                        src={file.fileUrl}
+                        alt={file.filename}
                         style={{
-                            width: 48,
-                            height: 48,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#f5f5f5',
+                            width: '100%',
+                            maxHeight: 200,
+                            objectFit: 'cover',
                             borderRadius: 4,
+                            marginBottom: 8,
+                            cursor: 'pointer',
                         }}
-                    >
-                        {getFileIcon(file.mimeType)}
-                    </div>
+                        onClick={handleView}
+                    />
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text strong ellipsis style={{ display: 'block', marginBottom: 4 }}>
-                        {file.filename}
-                    </Text>
-                    <Space size="small">
-                        <Tag color={getFileColor(file.mimeType)}>
-                            {getFileTypeLabel(file.mimeType)}
-                        </Tag>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {formatFileSize(file.fileSize)}
+                {isVideo && (
+                    <video
+                        src={file.fileUrl}
+                        controls
+                        style={{ width: '100%', maxHeight: 200, borderRadius: 4, marginBottom: 8 }}
+                    />
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {!isImage && !isVideo && (
+                        <div
+                            style={{
+                                width: 48, height: 48,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                backgroundColor: '#f5f5f5', borderRadius: 4,
+                            }}
+                        >
+                            {getFileIcon(file.mimeType)}
+                        </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text strong ellipsis style={{ display: 'block', marginBottom: 4 }}>
+                            {file.filename}
                         </Text>
+                        <Space size="small">
+                            <Tag color={getFileColor(file.mimeType)}>
+                                {getFileTypeLabel(file.mimeType)}
+                            </Tag>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                {formatFileSize(file.fileSize)}
+                            </Text>
+                        </Space>
+                    </div>
+                    <Space>
+                        {(isImage || isVideo) && (
+                            <Tooltip title="View">
+                                <Button type="text" icon={<EyeOutlined />} onClick={handleView} />
+                            </Tooltip>
+                        )}
+                        <Tooltip title="Download">
+                            <Button type="text" icon={<DownloadOutlined />} onClick={handleDownload} />
+                        </Tooltip>
+                        <Tooltip title="Share">
+                            <Button type="text" icon={<ShareAltOutlined />} onClick={handleShare} />
+                        </Tooltip>
                     </Space>
                 </div>
-                <Space>
-                    {(isImage || isVideo) && (
-                        <Tooltip title="View">
-                            <Button
-                                type="text"
-                                icon={<EyeOutlined />}
-                                onClick={handleView}
-                            />
-                        </Tooltip>
-                    )}
-                    <Tooltip title="Download">
-                        <Button
-                            type="text"
-                            icon={<DownloadOutlined />}
-                            onClick={handleDownload}
-                        />
-                    </Tooltip>
-                </Space>
-            </div>
-        </Card>
+            </Card>
+            <ShareFileModal file={file} open={shareOpen} onClose={() => setShareOpen(false)} />
+        </>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Layout, Empty, Button } from 'antd';
 import { MessageOutlined, ArrowLeftOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { ParticipantList } from '../components/ParticipantList';
 import { MessageList } from '../components/MessageList';
 import { MessageInputWithFiles } from '../components/MessageInputWithFiles';
 import { MessageSearch } from '../components/MessageSearch';
+import { ConversationFilesPanel } from '../components/ConversationFilesPanel';
 import { useConversations } from '../hooks/useConversations';
 import { useMessages } from '../hooks/useMessages';
 import { useAuth } from '../contexts/AuthContext';
@@ -51,7 +52,13 @@ export const Chat: React.FC = () => {
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [participantListVisible, setParticipantListVisible] = useState(false);
     const [searchModalVisible, setSearchModalVisible] = useState(false);
+    const [filesPanelOpen, setFilesPanelOpen] = useState(false);
     const [editingMessage, setEditingMessage] = useState<any | null>(null);
+    const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+
+    // Ref to track drag-enter depth (to avoid flicker on child elements)
+    const dragDepthRef = useRef(0);
+    const [isDragOver, setIsDragOver] = useState(false);
 
     const handleEditMessage = (message: any) => {
         setEditingMessage(message);
@@ -80,15 +87,55 @@ export const Chat: React.FC = () => {
         navigate('/dashboard');
     };
 
+    // Drag-and-drop handlers
+    const handleDragEnter = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        dragDepthRef.current++;
+        if (e.dataTransfer.types.includes('Files')) setIsDragOver(true);
+    }, []);
+
+    const handleDragLeave = useCallback((_e: React.DragEvent) => {
+        dragDepthRef.current--;
+        if (dragDepthRef.current === 0) setIsDragOver(false);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+    }, []);
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        dragDepthRef.current = 0;
+        setIsDragOver(false);
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length > 0) setDroppedFiles(files);
+    }, []);
+
+    // Paste handler (images/files from clipboard)
     useEffect(() => {
-        // Auto-connect when component mounts
+        const onPaste = (e: ClipboardEvent) => {
+            if (!selectedConversation) return;
+            const items = Array.from(e.clipboardData?.items || []);
+            const files = items
+                .filter(item => item.kind === 'file')
+                .map(item => item.getAsFile())
+                .filter((f): f is File => f !== null);
+            if (files.length > 0) setDroppedFiles(files);
+        };
+        window.addEventListener('paste', onPaste);
+        return () => window.removeEventListener('paste', onPaste);
+    }, [selectedConversation]);
+
+    useEffect(() => {
+        // Auto-connect when component mounts (run once only)
         connect();
 
         return () => {
             // Disconnect when component unmounts
             disconnect();
         };
-    }, [connect, disconnect]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Fetch initial unread counts when connected and user is available
     useEffect(() => {
@@ -202,7 +249,12 @@ export const Chat: React.FC = () => {
                         flexDirection: 'column',
                         height: 'calc(100vh - 64px)',
                         minWidth: 0,
+                        position: 'relative',
                     }}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
                 >
                     {selectedConversation ? (
                         <>
@@ -212,6 +264,8 @@ export const Chat: React.FC = () => {
                                 currentUserId={user?.id || ''}
                                 onShowParticipants={() => setParticipantListVisible(true)}
                                 onOpenSearch={() => setSearchModalVisible(true)}
+                                onToggleFiles={() => setFilesPanelOpen(o => !o)}
+                                filesOpen={filesPanelOpen}
                             />
 
                             {/* Messages Area */}
@@ -228,6 +282,23 @@ export const Chat: React.FC = () => {
                                 deletingMessageId={deletingMessageId}
                             />
 
+                            {/* Drag-over overlay */}
+                            {isDragOver && (
+                                <div style={{
+                                    position: 'absolute', inset: 0, zIndex: 100,
+                                    background: 'rgba(99, 102, 241, 0.1)',
+                                    border: '2px dashed #6366f1',
+                                    borderRadius: 8,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    pointerEvents: 'none',
+                                }}>
+                                    <div style={{ textAlign: 'center', color: '#6366f1' }}>
+                                        <div style={{ fontSize: 48 }}>📎</div>
+                                        <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>Drop files to attach</div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Message Input */}
                             <MessageInputWithFiles
                                 onSend={handleSendOrEdit}
@@ -238,6 +309,8 @@ export const Chat: React.FC = () => {
                                 placeholder={editingMessage ? 'Edit message...' : 'Type a message...'}
                                 onCancel={editingMessage ? handleCancelEdit : undefined}
                                 enableFileUpload={!editingMessage}
+                                droppedFiles={droppedFiles}
+                                onDroppedFilesConsumed={() => setDroppedFiles([])}
                             />
                         </>
                     ) : (
@@ -288,6 +361,14 @@ export const Chat: React.FC = () => {
                         id: p.user.id,
                         displayName: p.user.displayName,
                     }))}
+                />
+            )}
+
+            {selectedConversation && (
+                <ConversationFilesPanel
+                    conversationId={selectedConversation.id}
+                    open={filesPanelOpen}
+                    onClose={() => setFilesPanelOpen(false)}
                 />
             )}
         </Layout>

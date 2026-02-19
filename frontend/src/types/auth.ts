@@ -13,6 +13,7 @@ export interface User {
     avatarUrl?: string;
     role: string;
     subscriptionStatus?: string;
+    createdAt?: string;
 }
 
 export interface TokenResponse {
