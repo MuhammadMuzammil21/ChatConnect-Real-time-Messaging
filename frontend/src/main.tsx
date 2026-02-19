@@ -8,7 +8,8 @@ import { WebSocketProvider } from './contexts/WebSocketContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
-import App from './App.tsx'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
 import AuthCallback from './pages/AuthCallback.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import Profile from './pages/Profile.tsx'
@@ -22,7 +23,8 @@ createRoot(document.getElementById('root')!).render(
           <AuthProvider>
             <WebSocketProvider>
               <Routes>
-                <Route path="/" element={<App />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route
                   path="/dashboard"

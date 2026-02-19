@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { message } from 'antd';
 import axiosInstance from '../lib/axios';
@@ -61,14 +61,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         initializeAuth();
     }, []);
 
-    const login = (tokens: TokenResponse) => {
+    const login = useCallback((tokens: TokenResponse) => {
         localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.accessToken);
         localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, tokens.refreshToken);
         localStorage.setItem(TOKEN_KEYS.USER, JSON.stringify(tokens.user));
         setUser(tokens.user);
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             // Call logout endpoint to invalidate refresh token
             await axiosInstance.post('/auth/logout');
@@ -82,9 +82,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUser(null);
             message.success('Logged out successfully');
         }
-    };
+    }, []);
 
-    const refreshTokens = async (): Promise<boolean> => {
+    const refreshTokens = useCallback(async (): Promise<boolean> => {
         try {
             const refreshToken = localStorage.getItem(TOKEN_KEYS.REFRESH_TOKEN);
 
@@ -107,16 +107,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.error('Token refresh error:', error);
             return false;
         }
-    };
+    }, []);
 
-    const value: AuthContextType = {
+    const value: AuthContextType = useMemo(() => ({
         user,
         isAuthenticated: !!user,
         isLoading,
         login,
         logout,
         refreshTokens,
-    };
+    }), [user, isLoading, login, logout, refreshTokens]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

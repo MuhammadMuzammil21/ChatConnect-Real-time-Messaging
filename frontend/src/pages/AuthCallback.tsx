@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Spin } from 'antd';
+import LoadingScreen from '../components/LoadingScreen';
 import { useAuth } from '../contexts/AuthContext';
 import type { User } from '../types/auth';
 
@@ -42,14 +42,7 @@ function AuthCallback() {
         handleCallback();
     }, [navigate, searchParams, login]);
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-            <div className="text-center">
-                <Spin size="large" />
-                <p className="mt-4 text-gray-600">Completing sign in...</p>
-            </div>
-        </div>
-    );
+    return <LoadingScreen message="Completing sign in..." />;
 }
 
 export default AuthCallback;
