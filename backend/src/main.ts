@@ -6,7 +6,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
 
   // Enable CORS for frontend integration
   app.enableCors({
@@ -49,6 +51,7 @@ async function bootstrap() {
     .addTag('profile', 'User profile management endpoints')
     .addTag('conversations', 'Conversation management endpoints')
     .addTag('files', 'File upload and management endpoints')
+    .addTag('Payments', 'Stripe subscription and payment endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

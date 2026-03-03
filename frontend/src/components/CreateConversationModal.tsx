@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Radio, message } from 'antd';
+import { Modal, Form, Input, Select, Radio, message, Alert, Button } from 'antd';
+import { CrownFilled } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { CreateConversationDto } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
 import type { User } from '../types';
+import { useRole } from '../hooks/useRole';
 import axios from 'axios';
 
 const { Option } = Select;
@@ -24,6 +27,8 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
     const [loading, setLoading] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
+    const { isPremium } = useRole();
+    const navigate = useNavigate();
     const [conversationType, setConversationType] = useState<ConversationType>(
         ConversationType.DIRECT
     );
@@ -127,13 +132,46 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                     rules={[{ required: true, message: 'Please select a type' }]}
                 >
                     <Radio.Group
-                        onChange={(e) => setConversationType(e.target.value)}
+                        onChange={(e) => {
+                            if (e.target.value === ConversationType.GROUP && !isPremium) {
+                                return; // Don't allow switching
+                            }
+                            setConversationType(e.target.value);
+                        }}
                         value={conversationType}
                     >
                         <Radio value={ConversationType.DIRECT}>Direct Message</Radio>
-                        <Radio value={ConversationType.GROUP}>Group Chat</Radio>
+                        <Radio value={ConversationType.GROUP} disabled={!isPremium}>
+                            Group Chat {!isPremium && <CrownFilled style={{ color: '#faad14', marginLeft: 4 }} />}
+                        </Radio>
                     </Radio.Group>
                 </Form.Item>
+
+                {!isPremium && (
+                    <Alert
+                        message="Premium Feature"
+                        description={
+                            <span>
+                                Group chats are available for Premium subscribers.{' '}
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    style={{ padding: 0 }}
+                                    onClick={() => {
+                                        onClose();
+                                        navigate('/subscription');
+                                    }}
+                                >
+                                    Upgrade now
+                                </Button>
+                            </span>
+                        }
+                        type="info"
+                        showIcon
+                        icon={<CrownFilled style={{ color: '#faad14' }} />}
+                        style={{ marginBottom: 16 }}
+                    />
+                )}
 
                 {conversationType === ConversationType.GROUP && (
                     <Form.Item

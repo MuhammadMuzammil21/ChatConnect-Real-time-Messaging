@@ -14,6 +14,7 @@ import AuthCallback from './pages/AuthCallback.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import Profile from './pages/Profile.tsx'
 import { Chat } from './pages/Chat.tsx'
+import { SubscriptionPage, SubscriptionSuccess, SubscriptionCancel } from './pages/SubscriptionPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -47,6 +48,30 @@ createRoot(document.getElementById('root')!).render(
                   element={
                     <ProtectedRoute>
                       <Chat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/subscription"
+                  element={
+                    <ProtectedRoute>
+                      <SubscriptionPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/subscription/success"
+                  element={
+                    <ProtectedRoute>
+                      <SubscriptionSuccess />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/subscription/cancel"
+                  element={
+                    <ProtectedRoute>
+                      <SubscriptionCancel />
                     </ProtectedRoute>
                   }
                 />

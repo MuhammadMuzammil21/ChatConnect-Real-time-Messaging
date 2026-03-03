@@ -11,7 +11,7 @@ import { FindOptionsWhere, In, MoreThan, Repository, IsNull, Between, Like, ILik
 import { Conversation, ConversationType } from '../entities/conversation.entity';
 import { ConversationParticipant } from '../entities/conversation-participant.entity';
 import { Message, MessageType } from '../entities/message.entity';
-import { User } from '../entities/user.entity';
+import { User, UserRole } from '../entities/user.entity';
 import { File } from '../entities/file.entity';
 import { FilesService } from '../files/files.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -67,6 +67,13 @@ export class ConversationsService {
         );
       }
     } else if (type === ConversationType.GROUP) {
+      // Only PREMIUM and ADMIN users can create group conversations
+      if (creator.role !== UserRole.PREMIUM && creator.role !== UserRole.ADMIN) {
+        throw new ForbiddenException(
+          'Group chats require a Premium subscription. Upgrade to create group conversations.',
+        );
+      }
+
       if (!dto.name || dto.name.trim().length === 0) {
         throw new BadRequestException('Group conversations must have a name');
       }
