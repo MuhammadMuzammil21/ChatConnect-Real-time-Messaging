@@ -48,7 +48,7 @@ export class AuthController {
         const tokenResponse = await this.authService.login(req.user);
 
         // Redirect to frontend with tokens
-        const frontendUrl = `http://localhost:5173/auth/callback`;
+        const frontendUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback`;
         const params = new URLSearchParams({
             accessToken: tokenResponse.accessToken,
             refreshToken: tokenResponse.refreshToken,

@@ -64,7 +64,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
 
         // Create socket connection with authentication
-        const newSocket = io('http://localhost:3000/chat', {
+        const newSocket = io(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/chat`, {
             auth: {
                 token: token,
             },
