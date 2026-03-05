@@ -1,13 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { Spin, Empty, Button, Divider, Typography } from 'antd';
+import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import type { Message } from '../types/conversation';
 import { MessageItem } from './MessageItem';
 import { TypingIndicator } from './TypingIndicator';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import dayjs from 'dayjs';
-
-const { Text } = Typography;
 
 interface MessageListProps {
     messages: Message[];
@@ -118,7 +116,9 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (!loading && messages.length === 0) {
         return (
             <div className="flex items-center justify-center h-full">
-                <Empty description="No messages yet. Start the conversation!" />
+                <div className="text-center">
+                    <p className="text-sm text-neutral-500">No messages yet. Start the conversation!</p>
+                </div>
             </div>
         );
     }
@@ -128,20 +128,19 @@ export const MessageList: React.FC<MessageListProps> = ({
     return (
         <div
             ref={containerRef}
-            className="flex-1 overflow-y-auto p-4 bg-gray-50"
-            style={{ height: '100%' }}
+            className="flex-1 overflow-y-auto p-4"
+            style={{ height: '100%', background: '#0a0a0a' }}
         >
             {/* Load More Button */}
             {hasMore && (
                 <div className="text-center mb-4">
-                    <Button
-                        type="link"
+                    <button
                         onClick={onLoadMore}
-                        loading={loadingMore}
                         disabled={loadingMore}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
                     >
                         {loadingMore ? 'Loading...' : 'Load older messages'}
-                    </Button>
+                    </button>
                 </div>
             )}
 
@@ -149,11 +148,13 @@ export const MessageList: React.FC<MessageListProps> = ({
             {messageGroups.map((group, _) => (
                 <div key={group.date}>
                     {/* Date Separator */}
-                    <Divider plain>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                    <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-white/[0.06]" />
+                        <span className="text-[11px] text-neutral-600 font-medium">
                             {formatDateSeparator(group.date)}
-                        </Text>
-                    </Divider>
+                        </span>
+                        <div className="flex-1 h-px bg-white/[0.06]" />
+                    </div>
 
                     {/* Messages */}
                     {group.messages.map((message, index) => {

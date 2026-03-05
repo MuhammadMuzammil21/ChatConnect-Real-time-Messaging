@@ -1,19 +1,14 @@
 import React from 'react';
-import { Space, Typography, Avatar, Dropdown, Button } from 'antd';
+import { Avatar, Dropdown, Button } from 'antd';
 import {
-    TeamOutlined,
     UserOutlined,
-    MoreOutlined,
     UsergroupAddOutlined,
-    SearchOutlined,
-    PaperClipOutlined,
 } from '@ant-design/icons';
+import { Search, Paperclip, MoreHorizontal, Users } from 'lucide-react';
 import type { Conversation } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
 import { OnlineStatusBadge, UserStatusEnum } from './OnlineStatusBadge';
 import { useWebSocket } from '../contexts/WebSocketContext';
-
-const { Title, Text } = Typography;
 
 interface ConversationHeaderProps {
     conversation: Conversation;
@@ -34,23 +29,18 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
 }) => {
     const { getUserStatus } = useWebSocket();
 
-    // Get conversation display name
     const getConversationName = (): string => {
         if (conversation.type === ConversationType.GROUP) {
             return conversation.name || 'Unnamed Group';
         }
-
-        // For direct conversations, show the other participant's name
         const otherParticipant = conversation.participants.find(
             (p) => p.user.id !== currentUserId
         );
         return otherParticipant?.user.displayName || 'Unknown User';
     };
 
-    // Get participant count
     const participantCount = conversation.participants.length;
 
-    // Get other user's status for direct conversations
     const getOtherUserStatus = (): UserStatusEnum => {
         if (conversation.type === ConversationType.DIRECT) {
             const otherParticipant = conversation.participants.find(
@@ -77,8 +67,6 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
         return undefined;
     };
 
-
-
     const menuItems = [
         {
             key: 'participants',
@@ -90,33 +78,37 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
 
     return (
         <header
-            className="flex flex-wrap items-center justify-between gap-2 p-4 bg-white border-b border-gray-200 min-h-[72px] flex-shrink-0"
+            className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0"
+            style={{ background: '#0f0f0f' }}
             role="banner"
             aria-label={`Conversation with ${getConversationName()}`}
         >
-            <Space size="middle" className="min-w-0 flex-1">
+            {/* Left: Avatar + Name */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
                 {conversation.type === ConversationType.GROUP ? (
-                    <Avatar.Group maxCount={3} size="large">
+                    <Avatar.Group maxCount={3} size="default">
                         {conversation.participants.slice(0, 3).map((p) => (
                             <Avatar
                                 key={p.user.id}
                                 src={p.user.avatarUrl}
                                 icon={<UserOutlined />}
+                                style={{ background: '#262626', border: '1px solid rgba(255,255,255,0.1)' }}
                             >
                                 {!p.user.avatarUrl && p.user.displayName[0].toUpperCase()}
                             </Avatar>
                         ))}
                     </Avatar.Group>
                 ) : (
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <div className="relative inline-block shrink-0">
                         <Avatar
-                            size="large"
+                            size="default"
                             src={
                                 conversation.participants.find(
                                     (p) => p.user.id !== currentUserId
                                 )?.user.avatarUrl
                             }
                             icon={<UserOutlined />}
+                            style={{ background: '#262626', border: '1px solid rgba(255,255,255,0.1)' }}
                         >
                             {!conversation.participants.find((p) => p.user.id !== currentUserId)
                                 ?.user.avatarUrl &&
@@ -124,7 +116,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                                     .find((p) => p.user.id !== currentUserId)
                                     ?.user.displayName[0].toUpperCase()}
                         </Avatar>
-                        <div style={{ position: 'absolute', bottom: 0, right: 0 }}>
+                        <div className="absolute -bottom-0.5 -right-0.5">
                             <OnlineStatusBadge
                                 status={getOtherUserStatus()}
                                 lastSeen={getOtherUserLastSeen()}
@@ -135,44 +127,50 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                 )}
 
                 <div className="min-w-0">
-                    <Title level={5} className="m-0 truncate">
+                    <h4 className="text-sm font-medium text-neutral-200 truncate m-0">
                         {getConversationName()}
-                    </Title>
-                    <Space size="small">
-                        {conversation.type === ConversationType.GROUP && (
-                            <>
-                                <TeamOutlined className="text-gray-400" />
-                                <Text type="secondary" className="text-sm">
-                                    {participantCount} participants
-                                </Text>
-                            </>
-                        )}
-                    </Space>
+                    </h4>
+                    {conversation.type === ConversationType.GROUP && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <Users className="h-3 w-3 text-neutral-600" />
+                            <span className="text-xs text-neutral-500">{participantCount} participants</span>
+                        </div>
+                    )}
                 </div>
-            </Space>
+            </div>
 
-            <Space size="small" className="flex-shrink-0">
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1 shrink-0">
                 {onOpenSearch && (
-                    <Button
-                        type="text"
-                        icon={<SearchOutlined />}
+                    <button
                         onClick={onOpenSearch}
-                        aria-label="Search messages in this conversation"
-                    />
+                        aria-label="Search messages"
+                        className="flex items-center justify-center h-8 w-8 rounded-md text-neutral-500 hover:text-white hover:bg-white/[0.04] transition-colors"
+                    >
+                        <Search className="h-4 w-4" />
+                    </button>
                 )}
                 {onToggleFiles && (
-                    <Button
-                        type={filesOpen ? 'primary' : 'text'}
-                        icon={<PaperClipOutlined />}
+                    <button
                         onClick={onToggleFiles}
-                        aria-label="View files and media"
-                        title="Files & Media"
-                    />
+                        aria-label="Files & Media"
+                        className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${filesOpen
+                                ? 'text-indigo-400 bg-indigo-500/10'
+                                : 'text-neutral-500 hover:text-white hover:bg-white/[0.04]'
+                            }`}
+                    >
+                        <Paperclip className="h-4 w-4" />
+                    </button>
                 )}
                 <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-                    <Button type="text" icon={<MoreOutlined />} aria-label="Conversation options" />
+                    <button
+                        aria-label="Conversation options"
+                        className="flex items-center justify-center h-8 w-8 rounded-md text-neutral-500 hover:text-white hover:bg-white/[0.04] transition-colors"
+                    >
+                        <MoreHorizontal className="h-4 w-4" />
+                    </button>
                 </Dropdown>
-            </Space>
+            </div>
         </header>
     );
 };

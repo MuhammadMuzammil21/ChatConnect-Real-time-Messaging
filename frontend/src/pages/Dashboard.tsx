@@ -1,12 +1,18 @@
-import { Card, Button, Avatar, Layout, Statistic, Row, Col } from 'antd';
-import { LogoutOutlined, UserOutlined, MessageOutlined, SettingOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import RoleBadge from '../components/RoleBadge';
-import '../App.css';
-
-const { Header, Content } = Layout;
+import { motion } from 'framer-motion';
+import {
+    MessageSquare,
+    Settings,
+    LogOut,
+    CheckCircle,
+    Clock,
+    Shield,
+    Zap,
+    Star,
+} from 'lucide-react';
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -17,313 +23,176 @@ function Dashboard() {
         await logout();
     };
 
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
+
+    const container = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+    };
+    const item = {
+        hidden: { y: 16, opacity: 0 },
+        visible: { y: 0, opacity: 1 },
+    };
 
     return (
-        <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
-            <Header
-                style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    padding: '0 32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    height: '72px',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backdropFilter: 'blur(10px)',
-                    }}>
-                        <MessageOutlined style={{ fontSize: '24px', color: '#fff' }} />
+        <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
+            {/* ── Header ── */}
+            <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-white/[0.06]">
+                <div className="flex items-center gap-3">
+                    <div
+                        className="flex h-9 w-9 items-center justify-center rounded-lg"
+                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                    >
+                        <MessageSquare className="h-4 w-4 text-white" />
                     </div>
-                    <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600 }}>
-                        ChatConnect
-                    </h2>
+                    <span className="text-sm font-semibold text-neutral-200 tracking-wide">ChatConnect</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <Button
-                        type="text"
-                        icon={<MessageOutlined />}
-                        onClick={() => navigate('/chat')}
-                        style={{
-                            color: '#fff',
-                            fontSize: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            padding: '0 16px',
-                        }}
-                        className="header-logout-button"
-                    >
-                        Chat
-                    </Button>
-                    <Button
-                        type="text"
-                        icon={<SettingOutlined />}
-                        onClick={() => navigate('/profile')}
-                        style={{
-                            color: '#fff',
-                            fontSize: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            padding: '0 16px',
-                        }}
-                        className="header-logout-button"
-                    >
-                        Profile
-                    </Button>
-                    <Button
-                        type="text"
-                        icon={<LogoutOutlined />}
+                <nav className="flex items-center gap-1">
+                    {[
+                        { label: 'Chat', icon: MessageSquare, to: '/chat' },
+                        { label: 'Profile', icon: Settings, to: '/profile' },
+                    ].map((n) => (
+                        <button
+                            key={n.label}
+                            onClick={() => navigate(n.to)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        >
+                            <n.icon className="h-4 w-4" />
+                            <span className="hidden sm:inline">{n.label}</span>
+                        </button>
+                    ))}
+                    <button
                         onClick={handleLogout}
-                        style={{
-                            color: '#fff',
-                            fontSize: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            padding: '0 16px',
-                        }}
-                        className="header-logout-button"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-colors ml-2"
                     >
-                        Logout
-                    </Button>
-                </div>
-            </Header>
+                        <LogOut className="h-4 w-4" />
+                        <span className="hidden sm:inline">Logout</span>
+                    </button>
+                </nav>
+            </header>
 
-            <Content style={{ padding: '32px', background: '#f8fafc' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    {/* Welcome Card */}
-                    <Card
-                        style={{
-                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                            border: 'none',
-                            borderRadius: '16px',
-                            marginBottom: '24px',
-                            boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)',
-                        }}
-                        bodyStyle={{ padding: '32px' }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                            <Avatar
-                                size={80}
-                                src={user.avatarUrl}
-                                icon={<UserOutlined />}
-                                style={{
-                                    border: '4px solid rgba(255, 255, 255, 0.3)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                }}
-                            />
-                            <div style={{ flex: 1 }}>
-                                <h1 style={{ margin: 0, color: '#fff', fontSize: '28px', fontWeight: 700 }}>
-                                    Welcome back, {user.displayName}!
-                                </h1>
-                                <p style={{ margin: '8px 0 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: '16px' }}>
-                                    {user.email}
-                                </p>
-                                <div style={{ marginTop: '12px' }}>
-                                    <RoleBadge role={user.role} />
-                                </div>
+            {/* ── Content ── */}
+            <motion.main
+                variants={container}
+                initial="hidden"
+                animate="visible"
+                className="max-w-5xl mx-auto px-6 md:px-10 py-10 space-y-8"
+            >
+                {/* Welcome */}
+                <motion.section variants={item} className="flex items-center gap-5">
+                    <img
+                        src={user.avatarUrl || ''}
+                        alt={user.displayName}
+                        className="h-16 w-16 rounded-full border-2 border-white/10 object-cover bg-neutral-800"
+                    />
+                    <div>
+                        <h1 className="text-2xl font-semibold text-neutral-100 tracking-tight">
+                            Welcome back, {user.displayName}
+                        </h1>
+                        <p className="text-sm text-neutral-500 mt-0.5">{user.email}</p>
+                        <div className="mt-2">
+                            <RoleBadge role={user.role} />
+                        </div>
+                    </div>
+                </motion.section>
+
+                {/* Stats row */}
+                <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                        { label: 'Status', value: 'Active', icon: CheckCircle, color: '#10b981' },
+                        {
+                            label: 'Member Since',
+                            value: user.createdAt
+                                ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                                : '—',
+                            icon: Clock,
+                            color: '#818cf8',
+                        },
+                        { label: 'Role', value: user.role, icon: Shield, color: '#a78bfa' },
+                    ].map((s) => (
+                        <div
+                            key={s.label}
+                            className="rounded-xl border border-white/[0.06] p-5 flex items-start gap-4"
+                            style={{ background: '#111' }}
+                        >
+                            <div
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                style={{ background: `${s.color}15` }}
+                            >
+                                <s.icon className="h-4 w-4" style={{ color: s.color }} />
+                            </div>
+                            <div>
+                                <p className="text-xs text-neutral-500 uppercase tracking-wider font-medium">{s.label}</p>
+                                <p className="text-lg font-semibold text-neutral-200 mt-0.5">{s.value}</p>
                             </div>
                         </div>
-                    </Card>
+                    ))}
+                </motion.div>
 
-                    {/* Stats Cards */}
-                    <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Card
-                                style={{
-                                    borderRadius: '12px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                                }}
-                            >
-                                <Statistic
-                                    title="Account Status"
-                                    value="Active"
-                                    prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
-                                    valueStyle={{ color: '#10b981', fontSize: '24px', fontWeight: 600 }}
-                                />
-                            </Card>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Card
-                                style={{
-                                    borderRadius: '12px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                                }}
-                            >
-                                <Statistic
-                                    title="Member Since"
-                                    value={
-                                        user.createdAt
-                                            ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                year: 'numeric',
-                                            })
-                                            : '—'
-                                    }
-                                    prefix={<ClockCircleOutlined style={{ color: '#6366f1' }} />}
-                                    valueStyle={{ color: '#1f2937', fontSize: '20px', fontWeight: 600 }}
-                                />
-                            </Card>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Card
-                                style={{
-                                    borderRadius: '12px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                                }}
-                            >
-                                <Statistic
-                                    title="Account Type"
-                                    value={user.role}
-                                    prefix={<TeamOutlined style={{ color: '#8b5cf6' }} />}
-                                    valueStyle={{ color: '#1f2937', fontSize: '20px', fontWeight: 600 }}
-                                />
-                            </Card>
-                        </Col>
-                    </Row>
-
-                    {/* Quick Actions */}
-                    <Card
-                        title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Quick Actions</span>}
-                        style={{
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                            marginBottom: '24px',
-                        }}
+                {/* Quick Actions */}
+                <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                        onClick={() => navigate('/chat')}
+                        className="group flex items-center justify-center gap-3 rounded-xl border border-white/[0.06] py-4 text-sm font-medium text-white transition-all hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.08)]"
+                        style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
                     >
-                        <Row gutter={[16, 16]}>
-                            <Col xs={24} sm={12}>
-                                <Button
-                                    type="primary"
-                                    size="large"
-                                    icon={<MessageOutlined />}
-                                    onClick={() => navigate('/chat')}
-                                    block
-                                    style={{
-                                        height: '56px',
-                                        fontSize: '16px',
-                                        fontWeight: 500,
-                                        borderRadius: '10px',
-                                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                                        border: 'none',
-                                    }}
-                                >
-                                    Start Chatting
-                                </Button>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <Button
-                                    size="large"
-                                    icon={<SettingOutlined />}
-                                    onClick={() => navigate('/profile')}
-                                    block
-                                    style={{
-                                        height: '56px',
-                                        fontSize: '16px',
-                                        fontWeight: 500,
-                                        borderRadius: '10px',
-                                        borderColor: '#6366f1',
-                                        color: '#6366f1',
-                                    }}
-                                >
-                                    Edit Profile
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Card>
-
-                    {/* Features Overview */}
-                    <Card
-                        title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Your Features</span>}
-                        style={{
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                        }}
+                        <MessageSquare className="h-4 w-4" />
+                        Start Chatting
+                    </button>
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="group flex items-center justify-center gap-3 rounded-xl border border-white/[0.08] py-4 text-sm font-medium text-neutral-300 transition-all hover:text-white hover:border-white/[0.15] hover:bg-white/[0.03]"
+                        style={{ background: '#111' }}
                     >
-                        <div style={{ display: 'grid', gap: '16px' }}>
-                            {/* Free Features */}
-                            <div
-                                style={{
-                                    padding: '20px',
-                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                                    borderRadius: '12px',
-                                    border: '1px solid #86efac',
-                                }}
-                            >
-                                <h3 style={{ margin: '0 0 12px 0', color: '#166534', fontSize: '16px', fontWeight: 600 }}>
-                                    ✓ Included Features
-                                </h3>
-                                <ul style={{ margin: 0, paddingLeft: '20px', color: '#15803d' }}>
-                                    <li>Real-time messaging</li>
-                                    <li>Create conversations</li>
-                                    <li>Message editing & deletion</li>
-                                    <li>Online status indicators</li>
-                                    <li>Typing indicators</li>
+                        <Settings className="h-4 w-4" />
+                        Edit Profile
+                    </button>
+                </motion.div>
+
+                {/* Features */}
+                <motion.section variants={item}>
+                    <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-4">Your Features</h2>
+                    <div className="space-y-4">
+                        <div className="rounded-xl border border-white/[0.06] p-5" style={{ background: '#111' }}>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Zap className="h-4 w-4 text-emerald-400" />
+                                <span className="text-sm font-medium text-emerald-400">Included</span>
+                            </div>
+                            <ul className="space-y-2">
+                                {['Real-time messaging', 'Create conversations', 'Message editing & deletion', 'Online status indicators', 'Typing indicators'].map((f) => (
+                                    <li key={f} className="flex items-center gap-2 text-sm text-neutral-400">
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500/60" />
+                                        {f}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {(isPremium || isAdmin) && (
+                            <div className="rounded-xl border border-indigo-500/20 p-5" style={{ background: 'rgba(99,102,241,0.04)' }}>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Star className="h-4 w-4 text-indigo-400" />
+                                    <span className="text-sm font-medium text-indigo-400">
+                                        {isAdmin ? 'Admin' : 'Premium'}
+                                    </span>
+                                </div>
+                                <ul className="space-y-2">
+                                    {(isAdmin
+                                        ? ['User management', 'System analytics', 'Role assignment', 'Full system access']
+                                        : ['Advanced chat features', 'File sharing (100MB)', 'Custom themes', 'Priority support']
+                                    ).map((f) => (
+                                        <li key={f} className="flex items-center gap-2 text-sm text-neutral-400">
+                                            <CheckCircle className="h-3.5 w-3.5 text-indigo-500/60" />
+                                            {f}
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
-
-                            {/* Premium/Admin Features */}
-                            {(isPremium || isAdmin) && (
-                                <div
-                                    style={{
-                                        padding: '20px',
-                                        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-                                        borderRadius: '12px',
-                                        border: '1px solid #93c5fd',
-                                    }}
-                                >
-                                    <h3 style={{ margin: '0 0 12px 0', color: '#1e40af', fontSize: '16px', fontWeight: 600 }}>
-                                        ⭐ {isAdmin ? 'Admin' : 'Premium'} Features
-                                    </h3>
-                                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e3a8a' }}>
-                                        {isAdmin ? (
-                                            <>
-                                                <li>User management</li>
-                                                <li>System analytics</li>
-                                                <li>Role assignment</li>
-                                                <li>Full system access</li>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <li>Advanced chat features</li>
-                                                <li>File sharing (up to 100MB)</li>
-                                                <li>Custom themes</li>
-                                                <li>Priority support</li>
-                                            </>
-                                        )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-            </Content>
-        </Layout>
+                        )}
+                    </div>
+                </motion.section>
+            </motion.main>
+        </div>
     );
 }
 

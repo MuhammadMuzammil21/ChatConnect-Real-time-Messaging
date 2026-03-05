@@ -188,7 +188,7 @@ export const MessageInputWithFiles: React.FC<MessageInputProps> = ({
     );
 
     return (
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="p-4 border-t border-white/[0.06]" style={{ background: '#0f0f0f' }}>
             <Space direction="vertical" style={{ width: '100%' }} size="small">
                 {/* Show pending files */}
                 {pendingFiles.map((file, index) => (

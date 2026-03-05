@@ -7,10 +7,10 @@ interface LoadingScreenProps {
 
 const LoadingScreen = ({ message = 'Loading...' }: LoadingScreenProps) => {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
-            {/* Background blobs for visual consistency with landing page */}
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-purple-500/10 blur-[80px] pointer-events-none" />
+        <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0a0a0a' }}>
+            {/* Background blobs for visual consistency */}
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[80px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[80px] pointer-events-none" />
 
             <div className="relative z-10 flex flex-col items-center">
                 {/* Brand Logo with pulse effect */}
@@ -24,7 +24,7 @@ const LoadingScreen = ({ message = 'Loading...' }: LoadingScreenProps) => {
                 {/* Loading Spinner & Text */}
                 <div className="flex flex-col items-center gap-4">
                     <Spin size="large" />
-                    <h2 className="text-xl font-semibold text-gray-700 animate-pulse">
+                    <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#a3a3a3' }} className="animate-pulse">
                         {message}
                     </h2>
                 </div>

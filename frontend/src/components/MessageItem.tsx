@@ -78,7 +78,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             <div
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
             >
-                <div className="px-4 py-2 rounded-lg bg-gray-200 text-gray-500 italic">
+                <div className="px-4 py-2 rounded-lg bg-neutral-800/50 text-neutral-500 italic">
                     <Text type="secondary">This message was deleted</Text>
                 </div>
             </div>
@@ -97,6 +97,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                         icon={<UserOutlined />}
                         size="small"
                         className="flex-shrink-0 mt-1"
+                        style={{ background: '#262626', border: '1px solid rgba(255,255,255,0.08)' }}
                     />
                 )}
 
@@ -109,7 +110,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                             style={{
                                 fontSize: '12px',
                                 marginBottom: '4px',
-                                color: '#1890ff',
+                                color: '#818cf8',
                             }}
                         >
                             {message.sender.displayName}
@@ -120,12 +121,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div
                             className={`px-4 py-2 rounded-lg ${isOwnMessage
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-100 text-gray-900'
+                                ? 'text-white'
+                                : 'text-neutral-200'
                                 }`}
                             style={{
                                 wordBreak: 'break-word',
                                 whiteSpace: 'pre-wrap',
+                                background: isOwnMessage ? '#6366f1' : '#1a1a1a',
+                                border: isOwnMessage ? 'none' : '1px solid rgba(255,255,255,0.06)',
                             }}
                         >
                             {message.content && (

@@ -1,273 +1,267 @@
-# NestJS Chat Application
+# ChatConnect — Real-Time Messaging Platform
 
-A full-stack real-time chat application built with NestJS, React 19, PostgreSQL, and WebSockets.
+A full-stack real-time chat application built with NestJS, React, PostgreSQL, and WebSockets. Features Google OAuth authentication, role-based access control, file sharing, and a modern dark UI.
 
-## 🚀 Tech Stack
+---
+
+## Tech Stack
 
 ### Backend
-- **Framework**: NestJS (TypeScript)
-- **Database**: PostgreSQL
-- **ORM**: TypeORM
-- **Authentication**: Passport.js, Google OAuth 2.0, JWT
-- **Real-time**: Socket.io
-- **Testing**: Jest
+| Layer | Technology |
+|---|---|
+| Framework | NestJS (TypeScript) |
+| Database | PostgreSQL + TypeORM |
+| Auth | Passport.js, Google OAuth 2.0, JWT |
+| Real-time | Socket.io |
+| Payments | Stripe |
+| Testing | Jest |
 
 ### Frontend
-- **Framework**: React 19 (TypeScript)
-- **Build Tool**: Vite
-- **UI Library**: Ant Design
-- **Styling**: Tailwind CSS v4
-- **Routing**: React Router v7
-- **State Management**: TanStack Query
-- **Testing**: Vitest
+| Layer | Technology |
+|---|---|
+| Framework | React 19 (TypeScript) |
+| Build Tool | Vite |
+| Styling | Tailwind CSS v4 |
+| UI Components | shadcn/ui, Ant Design |
+| Animations | Framer Motion |
+| Icons | Lucide React |
+| Routing | React Router v7 |
+| Forms | React Hook Form + Zod |
 
-## 📋 Features
+---
 
-- 🔐 Google OAuth 2.0 Authentication
-- 🔑 JWT-based Session Management
-- 👥 Role-Based Access Control (FREE, PREMIUM, ADMIN)
-- 💬 Real-time Messaging
-- 📁 File Sharing
-- 🎨 Modern UI with Ant Design + Tailwind
-- 📱 Responsive Design
+## Features
 
-## 🛠️ Setup Instructions
+### Authentication & Authorization
+- Google OAuth 2.0 single sign-on
+- JWT access + refresh token management with auto-refresh
+- Role-based access control (FREE, PREMIUM, ADMIN)
+- Protected routes and API endpoints
+
+### Real-Time Messaging
+- WebSocket-powered instant messaging via Socket.io
+- Direct and group conversations
+- Message editing and deletion
+- Typing indicators and online/offline presence
+- Read receipts (double checkmarks)
+- Unread message count badges
+- Full-text message search with filters
+- Message history with infinite scroll pagination
+
+### File Sharing
+- Drag-and-drop and paste-to-upload file attachments
+- Per-conversation media gallery with grid view and lightbox
+- File type validation, size limits, and storage quotas
+- Secure local file storage
+
+### User Management
+- Profile editing (display name, status message)
+- Avatar upload with preview
+- Subscription status display
+- Stripe-integrated subscription flow (checkout, billing portal)
+
+### UI & Design
+- Minimalistic dark theme (shadcn/21st.dev aesthetic)
+- Framer Motion entrance animations
+- Responsive layout across all pages
+- Floating navbar with smooth-scroll anchor links
+- Split-screen login page with Google OAuth
+- Animated hero section with SVG background paths
+
+---
+
+## Project Structure
+
+```
+├── backend/
+│   ├── src/
+│   │   ├── auth/              # OAuth, JWT, guards, strategies
+│   │   ├── users/             # User entity, service, controller
+│   │   ├── chat/              # Conversations, messages, WebSocket gateway
+│   │   ├── files/             # File upload, storage, attachments
+│   │   ├── profile/           # Profile management
+│   │   └── subscription/      # Stripe integration
+│   └── test/                  # E2E tests
+│
+├── frontend/
+│   ├── src/
+│   │   ├── pages/             # Dashboard, Chat, Profile, Login, Landing
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── ui/            # shadcn components (button, card, input, etc.)
+│   │   │   ├── Conversation*  # Chat sidebar & header
+│   │   │   ├── Message*       # Message list, items, input, search
+│   │   │   └── File*          # Upload, preview, attachments, gallery
+│   │   ├── contexts/          # Auth, WebSocket providers
+│   │   ├── hooks/             # Custom hooks (conversations, messages, files)
+│   │   ├── api/               # API client modules
+│   │   └── types/             # TypeScript type definitions
+│   └── public/
+│
+└── docs/                      # Sprint documentation
+```
+
+---
+
+## Setup
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- PostgreSQL (v14 or higher)
-- npm or yarn
+- Node.js ≥ 18
+- PostgreSQL ≥ 14
+- Google Cloud OAuth credentials
+- Stripe API keys (for subscriptions)
 
-### Backend Setup
+### Backend
 
-1. **Navigate to backend directory**
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   
-   Create a `.env` file in the `backend` directory:
-   ```env
-   # Database Configuration
-   DB_HOST=127.0.0.1
-   DB_PORT=5433
-   DB_USERNAME=postgres
-   DB_PASSWORD=your_password
-   DB_DATABASE=chat_app
-
-   # JWT Configuration
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   JWT_EXPIRES_IN=15m
-   JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-this-in-production
-   JWT_REFRESH_EXPIRES_IN=7d
-
-   # Application Configuration
-   PORT=3000
-   NODE_ENV=development
-
-   # Google OAuth
-   GOOGLE_CLIENT_ID=your-google-client-id
-   GOOGLE_CLIENT_SECRET=your-google-client-secret
-   GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
-   ```
-
-4. **Set up PostgreSQL database**
-   ```sql
-   CREATE DATABASE chat_app;
-   ```
-
-5. **Run the application**
-   ```bash
-   npm run start:dev
-   ```
-
-   The backend will be available at `http://localhost:3000`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Install required packages** (if not already installed)
-   ```bash
-   npm install @tailwindcss/postcss @ant-design/icons react-router-dom
-   ```
-
-4. **Configure environment variables**
-   
-   Create a `.env` file in the `frontend` directory:
-   ```env
-   VITE_API_URL=http://localhost:3000
-   ```
-
-5. **Run the application**
-   ```bash
-   npm run dev
-   ```
-
-   The frontend will be available at `http://localhost:5173`
-
-### Frontend Structure
-
-```
-frontend/
-├── src/
-│   ├── pages/
-│   │   ├── AuthCallback.tsx    # OAuth callback handler
-│   │   └── Dashboard.tsx       # Protected dashboard page
-│   ├── App.tsx                 # Login page
-│   ├── main.tsx                # App entry with routing
-│   └── index.css               # Tailwind CSS imports
-├── postcss.config.js           # PostCSS with Tailwind v4
-└── tailwind.config.js          # Tailwind configuration
+```bash
+cd backend
+npm install
 ```
 
-## 🗄️ Database Schema
+Create `backend/.env`:
+```env
+# Database
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=chat_app
 
-### User Entity
-- `id` (UUID, Primary Key)
-- `email` (Unique, Required)
-- `google_id` (Unique, Nullable)
-- `display_name` (Required)
-- `avatar_url` (Nullable)
-- `role` (Enum: FREE, PREMIUM, ADMIN)
-- `subscription_status` (Enum: ACTIVE, INACTIVE, CANCELLED, PAST_DUE)
-- `status_message` (Nullable, Max 200 chars)
-- `stripe_customer_id` (Nullable)
-- `is_banned` (Boolean, Default: false)
-- `refresh_token` (Nullable)
-- `created_at` (Timestamp)
-- `updated_at` (Timestamp)
+# JWT
+JWT_SECRET=your-jwt-secret
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_REFRESH_EXPIRES_IN=7d
 
-## 🔐 Google OAuth Setup
+# Google OAuth
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
+# App
+PORT=3000
+NODE_ENV=development
+```
+
+```bash
+npm run start:dev    # http://localhost:3000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+```bash
+npm run dev          # http://localhost:5173
+```
+
+### Google OAuth Setup
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable Google+ API
-4. Configure OAuth consent screen
-5. Create OAuth 2.0 credentials (Web application)
-6. Add authorized redirect URI: `http://localhost:3000/auth/google/callback`
-7. Copy Client ID and Client Secret to `.env` file
+2. Create a project → Enable Google+ API
+3. Configure OAuth consent screen
+4. Create OAuth 2.0 Web credentials
+5. Add redirect URI: `http://localhost:3000/auth/google/callback`
+6. Copy Client ID & Secret into `.env`
 
-## 📚 API Endpoints
+---
+
+## API Endpoints
 
 ### Authentication
-- `GET /auth/google` - Initiate Google OAuth login
-- `GET /auth/google/callback` - Google OAuth callback
-- `POST /auth/refresh` - Refresh JWT token
-- `GET /auth/profile` - Get current user profile (Protected)
-- `POST /auth/logout` - Logout user (Protected)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/auth/google` | Initiate Google OAuth |
+| GET | `/auth/google/callback` | OAuth callback |
+| POST | `/auth/refresh` | Refresh JWT token |
+| GET | `/auth/profile` | Get current user |
+| POST | `/auth/logout` | Logout |
 
-### Root
-- `GET /` - Health check endpoint
+### Users
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/users` | List all users |
+| GET | `/profile` | Get profile |
+| PATCH | `/profile` | Update profile |
+| POST | `/profile/avatar` | Upload avatar |
 
-## 📅 Development Timeline
+### Conversations & Messages
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/conversations` | Create conversation |
+| GET | `/conversations` | List conversations |
+| GET | `/conversations/:id` | Get conversation |
+| POST | `/conversations/:id/participants` | Add participants |
+| POST | `/messages` | Send message |
+| GET | `/messages/conversation/:id` | Get messages (paginated) |
+| PATCH | `/messages/:id` | Edit message |
+| DELETE | `/messages/:id` | Delete message |
+| GET | `/messages/search` | Search messages |
+| GET | `/messages/unread-counts` | Get unread counts |
+| POST | `/messages/mark-read` | Mark as read |
 
-### ✅ Sprint 1: System Foundation and Authentication (Feb 2-8, 2026) - COMPLETED
+### Files
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/files/upload` | Upload file |
+| GET | `/files/:id` | Download file |
+| GET | `/files/conversation/:id` | List conversation files |
 
-**Status**: All Sprint 1 objectives successfully completed! See [Sprint 1 Complete Documentation](docs/Sprint1-Complete-Documentation.md) for comprehensive details.
+### WebSocket Events
+| Event | Direction | Description |
+|---|---|---|
+| `sendMessage` | Client → Server | Send a message |
+| `newMessage` | Server → Client | Receive a message |
+| `typingStart` / `typingStop` | Bidirectional | Typing indicators |
+| `userOnline` / `userOffline` | Server → Client | Presence updates |
+| `messageEdited` / `messageDeleted` | Server → Client | Message mutations |
+| `unreadCountUpdate` | Server → Client | Badge updates |
 
-**Key Achievements**:
-- ✅ Full-stack setup (NestJS + React 19)
-- ✅ Google OAuth 2.0 authentication
-- ✅ JWT token management with automatic refresh
-- ✅ Role-based access control (FREE, PREMIUM, ADMIN)
-- ✅ User profile management with avatar upload
-- ✅ 90%+ test coverage
-- ✅ Comprehensive API documentation
+---
 
-### ✅ Sprint 2: Real-Time Messaging System (Feb 9-15, 2026) - COMPLETED
+## Database Schema
 
-**Status**: All Sprint 2 objectives successfully completed! See [Sprint 2 Completion Status](docs/sprint2_completion_status.md) for comprehensive details.
+### Core Entities
+- **User** — id, email, googleId, displayName, avatarUrl, role, subscriptionStatus, stripeCustomerId, statusMessage, isBanned
+- **Conversation** — id, name, type (DIRECT / GROUP), createdBy
+- **ConversationParticipant** — userId, conversationId, joinedAt
+- **Message** — id, content, senderId, conversationId, isEdited, deletedAt, attachments
+- **FileMetadata** — id, filename, mimeType, size, storagePath, uploadedBy, conversationId
+- **UserStatus** — userId, status (ONLINE / AWAY / OFFLINE), lastSeen
 
-**Key Achievements**:
-- ✅ WebSocket infrastructure with Socket.io and JWT authentication
-- ✅ Real-time messaging (send, receive, edit, delete)
-- ✅ Direct and group conversations with participant management
-- ✅ Typing indicators and online/offline status tracking
-- ✅ Message read receipts (double checkmarks)
-- ✅ Full-text message search with filters
-- ✅ Unread message count badges
-- ✅ Professional UI with animations and loading skeletons
-- ✅ 12 new REST API endpoints + 15 WebSocket events
-- ✅ Auto-reconnection and error handling
+---
 
-### ✅ Sprint 3: Advanced Features & Polish (Feb 16-22, 2026) - COMPLETED
-
-**Status**: All Sprint 3 objectives successfully completed!
-
-**Key Achievements**:
-- ✅ **File Sharing Ecosystem**: Secure local storage, validation, quotas, and drag-and-drop uploads.
-- ✅ **Rich Media Gallery**: Grid view for conversation files with filtering and lightbox viewer.
-- ✅ **Landing Page**: High-converting, responsive landing page with scroll-reveal animations.
-- ✅ **Authentication Polish**: Dedicated login page and branded loading screens.
-- ✅ **Performance**: Optimized rendering and eliminated infinite loops in auth flow.
-- ✅ **UX Enhancements**: Paste-to-upload, file sharing links, and sidebar integration.
-
-## 🧪 Testing
+## Scripts
 
 ### Backend
 ```bash
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:cov
+npm run start:dev     # Dev server (watch mode)
+npm run build         # Production build
+npm run test          # Unit tests
+npm run test:e2e      # E2E tests
+npm run test:cov      # Coverage report
 ```
 
 ### Frontend
 ```bash
-# Unit tests
-npm run test
-
-# Coverage
-npm run test:coverage
+npm run dev           # Dev server
+npm run build         # Production build
+npm run preview       # Preview build
+npm run lint          # ESLint
 ```
 
-## 📝 Scripts
+---
 
-### Backend
-- `npm run start` - Start production server
-- `npm run start:dev` - Start development server with watch mode
-- `npm run start:debug` - Start server in debug mode
-- `npm run build` - Build for production
-- `npm run test` - Run tests
+## License
 
-### Frontend
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+MIT
 
-## 🤝 Contributing
+## Author
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 👥 Authors
-
-- Muhammad Muzammil
-
+Muhammad Muzammil

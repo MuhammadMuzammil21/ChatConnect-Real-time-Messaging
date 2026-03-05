@@ -39,7 +39,7 @@ export const SubscriptionPage = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%)',
             padding: '40px 20px',
         }}>
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -66,7 +66,7 @@ export const SubscriptionPage = () => {
                     {/* Free Plan */}
                     <Card
                         hoverable
-                        style={{ borderRadius: 16, border: '2px solid #e8e8e8' }}
+                        style={{ borderRadius: 16, border: '2px solid rgba(255,255,255,0.1)', background: '#171717' }}
                         styles={{ body: { padding: 32 } }}
                     >
                         <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -104,7 +104,7 @@ export const SubscriptionPage = () => {
                         style={{
                             borderRadius: 16,
                             border: '2px solid #faad14',
-                            background: 'linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%)',
+                            background: 'linear-gradient(135deg, rgba(250,173,20,0.1) 0%, rgba(250,140,22,0.08) 100%)',
                         }}
                         styles={{ body: { padding: 32 } }}
                     >
@@ -164,7 +164,7 @@ export const SubscriptionPage = () => {
 
                 {/* Subscription Info */}
                 {subscription && (
-                    <Card style={{ marginTop: 24, borderRadius: 16 }} styles={{ body: { padding: 24 } }}>
+                    <Card style={{ marginTop: 24, borderRadius: 16, background: '#171717', border: '1px solid rgba(255,255,255,0.1)' }} styles={{ body: { padding: 24 } }}>
                         <Title level={4}>Current Subscription</Title>
                         <Space direction="vertical">
                             <Text>
@@ -196,7 +196,7 @@ export const SubscriptionSuccess = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #52c41a22 0%, #73d13d22 100%)',
+            background: '#0a0a0a',
         }}>
             <Result
                 status="success"
@@ -229,7 +229,7 @@ export const SubscriptionCancel = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #fff7e622 0%, #fffbe622 100%)',
+            background: '#0a0a0a',
         }}>
             <Result
                 status="info"

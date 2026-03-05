@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Avatar, Badge, Typography, Space } from 'antd';
+import { Avatar } from 'antd';
 import { UserOutlined, TeamOutlined } from '@ant-design/icons';
 import type { Conversation } from '../types/conversation';
 import { ConversationType } from '../types/conversation';
@@ -9,8 +9,6 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
-
-const { Text } = Typography;
 
 interface ConversationItemProps {
     conversation: Conversation;
@@ -29,28 +27,22 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 }) => {
     const { getUserStatus } = useWebSocket();
 
-    // Get conversation display name
     const getConversationName = (): string => {
         if (conversation.type === ConversationType.GROUP) {
             return conversation.name || 'Unnamed Group';
         }
-
-        // For direct conversations, show the other participant's name
         const otherParticipant = conversation.participants.find(
             (p) => p.user.id !== currentUserId
         );
         return otherParticipant?.user.displayName || 'Unknown User';
     };
 
-    // Get last message (if available)
     const lastMessage = conversation.messages?.[conversation.messages.length - 1];
 
-    // Get participant avatars (max 3)
     const participantAvatars = conversation.participants
         .slice(0, 3)
         .map((p) => p.user);
 
-    // Get other user's status for direct conversations
     const getOtherUserStatus = (): UserStatusEnum => {
         if (conversation.type === ConversationType.DIRECT) {
             const otherParticipant = conversation.participants.find(
@@ -78,81 +70,83 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     };
 
     return (
-        <List.Item
+        <div
             onClick={() => onClick(conversation)}
-            className={`cursor-pointer transition-colors hover:bg-gray-50 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-l-2 ${isSelected
+                    ? 'bg-indigo-500/10 border-indigo-500'
+                    : 'border-transparent hover:bg-white/[0.03]'
                 }`}
-            style={{ padding: '12px 16px' }}
         >
-            <List.Item.Meta
-                avatar={
-                    conversation.type === ConversationType.GROUP ? (
-                        <Avatar.Group maxCount={2} size="large">
-                            {participantAvatars.map((user) => (
-                                <Avatar
-                                    key={user.id}
-                                    src={user.avatarUrl}
-                                    icon={<UserOutlined />}
-                                >
-                                    {!user.avatarUrl && user.displayName[0].toUpperCase()}
-                                </Avatar>
-                            ))}
-                        </Avatar.Group>
-                    ) : (
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
+            {/* Avatar */}
+            <div className="shrink-0 relative">
+                {conversation.type === ConversationType.GROUP ? (
+                    <Avatar.Group maxCount={2} size="default">
+                        {participantAvatars.map((user) => (
                             <Avatar
-                                size="large"
-                                src={participantAvatars[0]?.avatarUrl}
+                                key={user.id}
+                                src={user.avatarUrl}
                                 icon={<UserOutlined />}
+                                style={{ background: '#262626', border: '1px solid rgba(255,255,255,0.1)' }}
                             >
-                                {!participantAvatars[0]?.avatarUrl &&
-                                    participantAvatars[0]?.displayName[0].toUpperCase()}
+                                {!user.avatarUrl && user.displayName[0].toUpperCase()}
                             </Avatar>
-                            <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
-                                <OnlineStatusBadge
-                                    status={getOtherUserStatus()}
-                                    lastSeen={getOtherUserLastSeen()}
-                                    size="small"
-                                />
-                            </div>
-                        </div>
-                    )
-                }
-                title={
-                    <div className="flex items-center justify-between">
-                        <Space>
-                            <Text strong>{getConversationName()}</Text>
-                            {conversation.type === ConversationType.GROUP && (
-                                <TeamOutlined className="text-gray-400" />
-                            )}
-                        </Space>
-                        {lastMessage && (
-                            <Text type="secondary" className="text-xs">
-                                {dayjs(lastMessage.createdAt).fromNow()}
-                            </Text>
-                        )}
-                    </div>
-                }
-                description={
-                    <div className="flex items-center justify-between">
-                        <Text
-                            ellipsis
-                            type="secondary"
-                            className="text-sm max-w-[200px]"
+                        ))}
+                    </Avatar.Group>
+                ) : (
+                    <div className="relative inline-block">
+                        <Avatar
+                            size="default"
+                            src={participantAvatars[0]?.avatarUrl}
+                            icon={<UserOutlined />}
+                            style={{ background: '#262626', border: '1px solid rgba(255,255,255,0.1)' }}
                         >
-                            {lastMessage
-                                ? `${lastMessage.sender.displayName}: ${lastMessage.content}`
-                                : 'No messages yet'}
-                        </Text>
-                        {unreadCount > 0 && (
-                            <Badge
-                                count={unreadCount}
-                                style={{ backgroundColor: '#1890ff' }}
+                            {!participantAvatars[0]?.avatarUrl &&
+                                participantAvatars[0]?.displayName[0].toUpperCase()}
+                        </Avatar>
+                        <div className="absolute -bottom-0.5 -right-0.5">
+                            <OnlineStatusBadge
+                                status={getOtherUserStatus()}
+                                lastSeen={getOtherUserLastSeen()}
+                                size="small"
                             />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-neutral-200'}`}>
+                            {getConversationName()}
+                        </span>
+                        {conversation.type === ConversationType.GROUP && (
+                            <TeamOutlined style={{ fontSize: '11px', color: '#525252' }} />
                         )}
                     </div>
-                }
-            />
-        </List.Item>
+                    {lastMessage && (
+                        <span className="text-[11px] text-neutral-600 shrink-0">
+                            {dayjs(lastMessage.createdAt).fromNow()}
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <span className="text-xs text-neutral-500 truncate">
+                        {lastMessage
+                            ? `${lastMessage.sender.displayName}: ${lastMessage.content}`
+                            : 'No messages yet'}
+                    </span>
+                    {unreadCount > 0 && (
+                        <span
+                            className="flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-[10px] font-bold text-white shrink-0"
+                            style={{ background: '#6366f1' }}
+                        >
+                            {unreadCount}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 };

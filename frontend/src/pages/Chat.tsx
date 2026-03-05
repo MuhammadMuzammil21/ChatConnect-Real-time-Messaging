@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Layout, Empty, Button } from 'antd';
-import { MessageOutlined, ArrowLeftOutlined, LogoutOutlined } from '@ant-design/icons';
+import { MessageSquare, ArrowLeft, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { ConnectionStatus } from '../components/ConnectionStatus';
@@ -16,8 +15,6 @@ import { useConversations } from '../hooks/useConversations';
 import { useMessages } from '../hooks/useMessages';
 import { useAuth } from '../contexts/AuthContext';
 import { messagesApi } from '../api/messages';
-
-const { Header, Content, Sider } = Layout;
 
 export const Chat: React.FC = () => {
     const navigate = useNavigate();
@@ -56,17 +53,11 @@ export const Chat: React.FC = () => {
     const [editingMessage, setEditingMessage] = useState<any | null>(null);
     const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
 
-    // Ref to track drag-enter depth (to avoid flicker on child elements)
     const dragDepthRef = useRef(0);
     const [isDragOver, setIsDragOver] = useState(false);
 
-    const handleEditMessage = (message: any) => {
-        setEditingMessage(message);
-    };
-
-    const handleCancelEdit = () => {
-        setEditingMessage(null);
-    };
+    const handleEditMessage = (message: any) => setEditingMessage(message);
+    const handleCancelEdit = () => setEditingMessage(null);
 
     const handleSendOrEdit = async (content: string, fileIds?: string[]) => {
         if (editingMessage) {
@@ -83,9 +74,7 @@ export const Chat: React.FC = () => {
         navigate('/');
     };
 
-    const handleBack = () => {
-        navigate('/dashboard');
-    };
+    const handleBack = () => navigate('/dashboard');
 
     // Drag-and-drop handlers
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -111,7 +100,7 @@ export const Chat: React.FC = () => {
         if (files.length > 0) setDroppedFiles(files);
     }, []);
 
-    // Paste handler (images/files from clipboard)
+    // Paste handler
     useEffect(() => {
         const onPaste = (e: ClipboardEvent) => {
             if (!selectedConversation) return;
@@ -127,17 +116,11 @@ export const Chat: React.FC = () => {
     }, [selectedConversation]);
 
     useEffect(() => {
-        // Auto-connect when component mounts (run once only)
         connect();
-
-        return () => {
-            // Disconnect when component unmounts
-            disconnect();
-        };
+        return () => { disconnect(); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Fetch initial unread counts when connected and user is available
     useEffect(() => {
         if (!isConnected || !user) return;
         messagesApi
@@ -147,87 +130,43 @@ export const Chat: React.FC = () => {
     }, [isConnected, user, setUnreadCounts]);
 
     return (
-        <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
-            <Header
-                style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    padding: '0 32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    height: '72px',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <Button
-                        type="text"
-                        icon={<ArrowLeftOutlined />}
+        <div className="flex flex-col h-screen" style={{ background: '#0a0a0a' }}>
+            {/* ── Header ── */}
+            <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-white/[0.06] shrink-0">
+                <div className="flex items-center gap-3">
+                    <button
                         onClick={handleBack}
-                        style={{
-                            color: '#fff',
-                            fontSize: '18px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '10px',
-                        }}
-                        className="header-back-button"
-                    />
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backdropFilter: 'blur(10px)',
-                    }}>
-                        <MessageOutlined style={{ fontSize: '24px', color: '#fff' }} />
-                    </div>
-                    <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600 }}>
-                        ChatConnect
-                    </h2>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <ConnectionStatus />
-                    <Button
-                        type="text"
-                        icon={<LogoutOutlined />}
-                        onClick={handleLogout}
-                        style={{
-                            color: '#fff',
-                            fontSize: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            padding: '0 16px',
-                        }}
-                        className="header-logout-button"
+                        className="flex items-center justify-center h-8 w-8 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
                     >
-                        Logout
-                    </Button>
+                        <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <div className="h-4 w-px bg-white/[0.08]" />
+                    <div
+                        className="flex h-8 w-8 items-center justify-center rounded-lg"
+                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                    >
+                        <MessageSquare className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-200 tracking-wide">Chat</span>
                 </div>
-            </Header>
+                <div className="flex items-center gap-3">
+                    <ConnectionStatus />
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-colors"
+                    >
+                        <LogOut className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </header>
 
-            <Layout style={{ background: '#f8fafc' }}>
-                {/* Conversation List Sidebar */}
-                <Sider
-                    width={380}
-                    style={{
-                        background: '#fff',
-                        overflow: 'auto',
-                        height: 'calc(100vh - 72px)',
-                        borderRight: '1px solid #e2e8f0',
-                        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)',
-                    }}
-                    breakpoint="lg"
-                    collapsedWidth="0"
+            {/* ── Body (sidebar + chat area) ── */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar */}
+                <aside
+                    className="hidden lg:flex flex-col border-r border-white/[0.06] overflow-y-auto"
+                    style={{ width: '360px', background: '#0f0f0f' }}
                 >
                     <ConversationList
                         conversations={conversations}
@@ -237,20 +176,14 @@ export const Chat: React.FC = () => {
                         currentUserId={user?.id || ''}
                         loading={loading}
                     />
-                </Sider>
+                </aside>
 
                 {/* Main Chat Area */}
-                <Content
+                <main
                     role="main"
                     aria-label="Chat messages"
-                    style={{
-                        background: '#fff',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: 'calc(100vh - 64px)',
-                        minWidth: 0,
-                        position: 'relative',
-                    }}
+                    className="flex-1 flex flex-col min-w-0 relative"
+                    style={{ background: '#0a0a0a' }}
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}
                     onDragOver={handleDragOver}
@@ -258,7 +191,6 @@ export const Chat: React.FC = () => {
                 >
                     {selectedConversation ? (
                         <>
-                            {/* Conversation Header */}
                             <ConversationHeader
                                 conversation={selectedConversation}
                                 currentUserId={user?.id || ''}
@@ -268,7 +200,6 @@ export const Chat: React.FC = () => {
                                 filesOpen={filesPanelOpen}
                             />
 
-                            {/* Messages Area */}
                             <MessageList
                                 messages={messages}
                                 currentUserId={user?.id || ''}
@@ -284,22 +215,16 @@ export const Chat: React.FC = () => {
 
                             {/* Drag-over overlay */}
                             {isDragOver && (
-                                <div style={{
-                                    position: 'absolute', inset: 0, zIndex: 100,
-                                    background: 'rgba(99, 102, 241, 0.1)',
-                                    border: '2px dashed #6366f1',
-                                    borderRadius: 8,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    pointerEvents: 'none',
-                                }}>
-                                    <div style={{ textAlign: 'center', color: '#6366f1' }}>
-                                        <div style={{ fontSize: 48 }}>📎</div>
-                                        <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>Drop files to attach</div>
+                                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg pointer-events-none"
+                                    style={{ background: 'rgba(99, 102, 241, 0.08)', border: '2px dashed rgba(99, 102, 241, 0.4)' }}
+                                >
+                                    <div className="text-center" style={{ color: '#818cf8' }}>
+                                        <div className="text-4xl mb-2">📎</div>
+                                        <div className="text-sm font-medium">Drop files to attach</div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Message Input */}
                             <MessageInputWithFiles
                                 onSend={handleSendOrEdit}
                                 conversationId={selectedConversation.id}
@@ -314,22 +239,15 @@ export const Chat: React.FC = () => {
                             />
                         </>
                     ) : (
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                height: '100%',
-                            }}
-                        >
-                            <Empty
-                                description="Select a conversation to start chatting"
-                                aria-live="polite"
-                            />
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center">
+                                <MessageSquare className="h-12 w-12 text-neutral-700 mx-auto mb-4" />
+                                <p className="text-sm text-neutral-500">Select a conversation to start chatting</p>
+                            </div>
                         </div>
                     )}
-                </Content>
-            </Layout>
+                </main>
+            </div>
 
             {/* Modals */}
             <CreateConversationModal
@@ -371,6 +289,6 @@ export const Chat: React.FC = () => {
                     onClose={() => setFilesPanelOpen(false)}
                 />
             )}
-        </Layout>
+        </div>
     );
 };
