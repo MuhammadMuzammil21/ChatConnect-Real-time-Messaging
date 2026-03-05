@@ -40,7 +40,7 @@ export function AuthFormSplitScreen({
     return (
         <div className="relative flex min-h-screen w-full flex-col md:flex-row">
             {/* Left Panel: Form */}
-            <div className="flex w-full flex-col items-center justify-center p-8 md:w-1/2" style={{ background: '#0a0a0a' }}>
+            <div className="flex w-full min-h-screen md:min-h-0 flex-col items-center justify-center px-5 py-10 sm:p-8 md:w-1/2" style={{ background: '#0a0a0a' }}>
                 <div className="w-full max-w-md">
                     <motion.div
                         variants={containerVariants}
@@ -82,10 +82,10 @@ export function AuthFormSplitScreen({
 
                         {/* Title */}
                         <motion.div variants={itemVariants} className="text-left">
-                            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: '#e5e5e5' }}>
+                            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#e5e5e5' }}>
                                 Welcome back
                             </h1>
-                            <p className="mt-2 text-sm" style={{ color: '#737373' }}>
+                            <p className="mt-1.5 sm:mt-2 text-sm" style={{ color: '#737373' }}>
                                 Sign in to continue to your conversations
                             </p>
                         </motion.div>
@@ -103,7 +103,7 @@ export function AuthFormSplitScreen({
                         <motion.div variants={itemVariants}>
                             <button
                                 onClick={onGoogleLogin}
-                                className="flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-[1.01]"
+                                className="flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-3.5 text-sm font-medium transition-all hover:scale-[1.01] active:scale-[0.99]"
                                 style={{
                                     background: 'rgba(23, 23, 23, 0.8)',
                                     borderColor: 'rgba(255,255,255,0.1)',
@@ -136,7 +136,7 @@ export function AuthFormSplitScreen({
                         <motion.div variants={itemVariants}>
                             <Button
                                 onClick={onGoogleLogin}
-                                className="w-full h-11 text-sm font-semibold"
+                                className="w-full h-12 text-sm font-semibold"
                                 style={{
                                     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                                     border: 'none',

@@ -236,7 +236,7 @@ const LandingPage: React.FC = () => {
 
             {/* ── Footer ── */}
             <footer className="border-t border-white/10 bg-neutral-950 py-8">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col items-center gap-4 md:flex-row md:justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white text-xs">
                             <MessageOutlined />

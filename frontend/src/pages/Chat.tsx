@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { MessageSquare, ArrowLeft, LogOut } from 'lucide-react';
+import { MessageSquare, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { ConnectionStatus } from '../components/ConnectionStatus';
@@ -52,6 +52,7 @@ export const Chat: React.FC = () => {
     const [filesPanelOpen, setFilesPanelOpen] = useState(false);
     const [editingMessage, setEditingMessage] = useState<any | null>(null);
     const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     const dragDepthRef = useRef(0);
     const [isDragOver, setIsDragOver] = useState(false);
@@ -75,6 +76,11 @@ export const Chat: React.FC = () => {
     };
 
     const handleBack = () => navigate('/dashboard');
+
+    const handleSelectConversation = (conv: any) => {
+        selectConversation(conv);
+        setMobileSidebarOpen(false);
+    };
 
     // Drag-and-drop handlers
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -132,15 +138,22 @@ export const Chat: React.FC = () => {
     return (
         <div className="flex flex-col h-screen" style={{ background: '#0a0a0a' }}>
             {/* ── Header ── */}
-            <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-white/[0.06] shrink-0">
-                <div className="flex items-center gap-3">
+            <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 h-14 border-b border-white/[0.06] shrink-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Mobile sidebar toggle */}
+                    <button
+                        onClick={() => setMobileSidebarOpen(o => !o)}
+                        className="lg:hidden flex items-center justify-center h-8 w-8 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                    >
+                        {mobileSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                    </button>
                     <button
                         onClick={handleBack}
-                        className="flex items-center justify-center h-8 w-8 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        className="hidden lg:flex items-center justify-center h-8 w-8 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </button>
-                    <div className="h-4 w-px bg-white/[0.08]" />
+                    <div className="hidden sm:block h-4 w-px bg-white/[0.08]" />
                     <div
                         className="flex h-8 w-8 items-center justify-center rounded-lg"
                         style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
@@ -149,11 +162,11 @@ export const Chat: React.FC = () => {
                     </div>
                     <span className="text-sm font-semibold text-neutral-200 tracking-wide">Chat</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     <ConnectionStatus />
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-colors"
+                        className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-md text-sm text-neutral-500 hover:text-red-400 hover:bg-white/[0.04] transition-colors"
                     >
                         <LogOut className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Logout</span>
@@ -162,16 +175,29 @@ export const Chat: React.FC = () => {
             </header>
 
             {/* ── Body (sidebar + chat area) ── */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar */}
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Mobile sidebar overlay backdrop */}
+                {mobileSidebarOpen && (
+                    <div
+                        className="lg:hidden fixed inset-0 z-30 bg-black/50"
+                        onClick={() => setMobileSidebarOpen(false)}
+                    />
+                )}
+
+                {/* Sidebar — always visible on lg+, slide-in overlay on mobile */}
                 <aside
-                    className="hidden lg:flex flex-col border-r border-white/[0.06] overflow-y-auto"
-                    style={{ width: '360px', background: '#0f0f0f' }}
+                    className={`
+                        fixed lg:relative z-40 lg:z-auto top-14 lg:top-0 bottom-0 left-0
+                        flex flex-col border-r border-white/[0.06] overflow-y-auto
+                        transition-transform duration-200 ease-in-out
+                        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    `}
+                    style={{ width: '320px', maxWidth: '85vw', background: '#0f0f0f' }}
                 >
                     <ConversationList
                         conversations={conversations}
                         selectedConversationId={selectedConversation?.id}
-                        onSelectConversation={selectConversation}
+                        onSelectConversation={handleSelectConversation}
                         onCreateConversation={() => setCreateModalVisible(true)}
                         currentUserId={user?.id || ''}
                         loading={loading}
@@ -239,11 +265,16 @@ export const Chat: React.FC = () => {
                             />
                         </>
                     ) : (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center">
-                                <MessageSquare className="h-12 w-12 text-neutral-700 mx-auto mb-4" />
-                                <p className="text-sm text-neutral-500">Select a conversation to start chatting</p>
-                            </div>
+                        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4">
+                            <MessageSquare className="h-12 w-12 text-neutral-700" />
+                            <p className="text-sm text-neutral-500 text-center">Select a conversation to start chatting</p>
+                            <button
+                                onClick={() => setMobileSidebarOpen(true)}
+                                className="lg:hidden mt-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                            >
+                                View Conversations
+                            </button>
                         </div>
                     )}
                 </main>

@@ -38,8 +38,9 @@ import { PaymentsModule } from './payments/payments.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [User, Message, Conversation, ConversationParticipant, UserStatus, File, FileDownload, FileShareLink, Subscription],
-        synchronize: configService.get('NODE_ENV') === 'development', // Auto-sync in development only
+        synchronize: true, // Auto-create tables (disable after initial setup in production)
         logging: configService.get('NODE_ENV') === 'development',
+        ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
       }),
       inject: [ConfigService],
     }),

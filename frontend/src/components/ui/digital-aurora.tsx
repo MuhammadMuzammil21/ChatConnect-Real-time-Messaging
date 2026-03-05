@@ -29,7 +29,7 @@ const AuroraHero: React.FC<AuroraHeroProps> = ({
         <section className="relative h-screen w-screen overflow-hidden">
             <ShaderBackground />
 
-            <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-start gap-6 px-6 pb-24 pt-36 sm:gap-8 sm:pt-44 md:px-10 lg:px-16">
+            <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-start gap-5 px-4 pb-16 pt-28 sm:gap-8 sm:px-6 sm:pb-24 sm:pt-44 md:px-10 lg:px-16">
                 {badgeText && badgeLabel && (
                     <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
                         <span className="text-[10px] font-light uppercase tracking-[0.08em] text-white/70">{badgeLabel}</span>
@@ -38,20 +38,20 @@ const AuroraHero: React.FC<AuroraHeroProps> = ({
                     </div>
                 )}
 
-                <h1 className="max-w-2xl text-left text-5xl font-extralight leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl">
+                <h1 className="max-w-2xl text-left text-3xl font-extralight leading-[1.1] tracking-tight text-white sm:text-5xl md:text-7xl">
                     {title}
                 </h1>
 
-                <p className="max-w-xl text-left text-base font-light leading-relaxed tracking-tight text-white/75 sm:text-lg">
+                <p className="max-w-xl text-left text-sm font-light leading-relaxed tracking-tight text-white/75 sm:text-base md:text-lg">
                     {description}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">
                     {ctaButtons.map((button, index) => (
                         <a
                             key={index}
                             href={button.href}
-                            className={`rounded-2xl border border-white/10 px-5 py-3 text-sm font-light tracking-tight transition-colors focus:outline-none focus:ring-2 focus:ring-white/30 duration-300 ${button.primary
+                            className={`rounded-2xl border border-white/10 px-5 py-3 text-sm font-light tracking-tight text-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/30 duration-300 ${button.primary
                                 ? "bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                                 : "text-white/80 hover:bg-white/5"
                                 }`}
@@ -61,7 +61,7 @@ const AuroraHero: React.FC<AuroraHeroProps> = ({
                     ))}
                 </div>
 
-                <ul className="mt-8 flex flex-wrap gap-6 text-xs font-extralight tracking-tight text-white/60">
+                <ul className="mt-4 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-6 text-xs font-extralight tracking-tight text-white/60">
                     {microDetails.map((detail, index) => (
                         <li key={index} className="flex items-center gap-2">
                             <span className="h-1 w-1 rounded-full bg-white/40" /> {detail}
