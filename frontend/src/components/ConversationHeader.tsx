@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, Dropdown, Button } from 'antd';
+import { Avatar, Dropdown } from 'antd';
 import {
     UserOutlined,
     UsergroupAddOutlined,
@@ -155,8 +155,8 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                         onClick={onToggleFiles}
                         aria-label="Files & Media"
                         className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${filesOpen
-                                ? 'text-indigo-400 bg-indigo-500/10'
-                                : 'text-neutral-500 hover:text-white hover:bg-white/[0.04]'
+                            ? 'text-indigo-400 bg-indigo-500/10'
+                            : 'text-neutral-500 hover:text-white hover:bg-white/[0.04]'
                             }`}
                     >
                         <Paperclip className="h-4 w-4" />
